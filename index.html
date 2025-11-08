@@ -103,7 +103,7 @@
     </div>
 
 
-    <audio id="somSino" src="https://cdn.pixabay.com/download/audio/2021/09/20/audio_84e4b6aaf9.mp3" preload="auto"></audio>
+    <audio id="somSino" src="sino.mp3" preload="auto"></audio>
 
     <script>
       const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
@@ -125,9 +125,14 @@
         resultado.classList.add("show");
         resultado.textContent = data.nome || data.mensagem;
 
+        somSino.pause();
         somSino.currentTime = 0;
-        somSino.play().catch(() => {});
+        somSino.load();
 
+        setTimeout(() => {
+          somSino.play().catch(() => {});
+        }, 100);
+        
         // === NOVO: BLOQUEAR TELA APÓS SORTEAR ===
         if (data.nome) {
           // esconde input e botão
