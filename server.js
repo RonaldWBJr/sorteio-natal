@@ -1,5 +1,6 @@
 import express from "express";
-import { LowSync, JSONFileSync } from "lowdb";
+import { LowSync } from "lowdb";
+import { JSONFileSync } from "lowdb/node";
 import cors from "cors";
 import bodyParser from "body-parser";
 

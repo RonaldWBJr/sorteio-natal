@@ -1,1 +1,24 @@
-{}
+{
+  "participantes": [
+    {
+      "nome": "Lucas",
+      "sorteado": false
+    },
+    {
+      "nome": "João",
+      "sorteado": false
+    },
+    {
+      "nome": "Carlos",
+      "sorteado": false
+    },
+    {
+      "nome": "Joana",
+      "sorteado": false
+    },
+    {
+      "nome": "Lara",
+      "sorteado": false
+    }
+  ]
+}
