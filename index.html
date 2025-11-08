@@ -63,11 +63,11 @@
   }
 
   #resultado {
-    display: none;
+    visibility: hidden;
   }
 
   #resultado.show {
-    display: block;
+    visibility: visible;
   }
 
   @keyframes aparecer {
@@ -119,14 +119,22 @@
           return;
         }
 
+        btnSortear.disabled = true; // impede outra tentativa
+
         const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
         const data = await res.json();
 
         resultado.classList.add("show");
         resultado.textContent = data.nome || data.mensagem;
+
         somSino.currentTime = 0;
         somSino.play().catch(() => {});
+
+        // se a pessoa NÃO sorteou ainda, reabilita o botão
+        if (data.nome) btnSortear.disabled = true;
+        else btnSortear.disabled = false;
       });
+
 
       // Efeito de neve
       function criarNeve() {

@@ -8,17 +8,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Função para tratar acentos e letras maiúsculas
-function normalizar(str) {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// Banco de dados local (db.json)
 const adapter = new JSONFileSync("db.json");
 const db = new LowSync(adapter, { participantes: [] });
 db.read();
 
-// Inicializa lista de participantes fixos (edite aqui)
+function normalizar(str) {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 if (!db.data.participantes || db.data.participantes.length === 0) {
   db.data.participantes = [
     { nome: "Lucas", sorteado: false, jaSorteou: false },
@@ -43,43 +40,44 @@ if (!db.data.participantes || db.data.participantes.length === 0) {
   db.write();
 }
 
-// Rota para sortear um participante
 app.get("/draw", (req, res) => {
   db.read();
 
-  const quemSorteia = (req.query.quem || "").trim();
+  const quemSorteia = normalizar((req.query.quem || "").trim());
 
   if (!quemSorteia) {
-    return res.status(400).json({ mensagem: "Nome de quem sorteia é obrigatório." });
+    return res.status(400).json({ mensagem: "Nome é obrigatório." });
   }
 
-  const participante = db.data.participantes.find(
-    (p) => normalizar(p.nome) === normalizar(quemSorteia)
+  // agora aceita parte do nome
+  const participante = db.data.participantes.find((p) =>
+    normalizar(p.nome).includes(quemSorteia)
   );
 
   if (!participante) {
-    return res.status(400).json({ mensagem: "Esse nome não está na lista de participantes!" });
+    return res.status(400).json({ mensagem: "Nome não encontrado na lista." });
   }
 
   if (participante.jaSorteou) {
-    return res.json({ mensagem: "Você já fez seu sorteio! ❌" });
+    return res.json({ mensagem: "Você já sorteou! ❌" });
   }
 
   const naoSorteados = db.data.participantes.filter(
-    (p) => !p.sorteado && normalizar(p.nome) !== normalizar(quemSorteia)
+    (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
   );
 
   if (naoSorteados.length === 0) {
-    return res.json({ mensagem: "Não há mais ninguém disponível para sortear! 🎅" });
+    return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
   }
 
   const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
 
-  sorteado.sorteado = true;
   participante.jaSorteou = true;
+  sorteado.sorteado = true;
+
   db.write();
 
   res.json({ nome: sorteado.nome });
 });
 
-app.listen(3000, () => console.log("🎄 Servidor rodando na porta 3000"));
+app.listen(3000, () => console.log("✅ Servidor no ar na porta 3000"));
