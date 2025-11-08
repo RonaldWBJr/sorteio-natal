@@ -1,165 +1,156 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sorteio de Natal 🎅</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #d32f2f, #ff6659);
-        color: #333;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteio de Natal 🎅</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #d32f2f, #ff6659);
+      color: #333;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+      display: none;
+    }
 
-  .container {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    position: relative;
+    h1 { color: #b71c1c; margin-bottom: 1rem; }
+
+    button {
+      background-color: #d32f2f;
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: 0.3s;
+    }
+    button:hover { background-color: #b71c1c; transform: scale(1.05); }
+
+    .resultado {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #fff8e1;
+      color: #b71c1c;
+      font-weight: bold;
+      font-size: 1.3rem;
+      visibility: hidden;
+    }
+    .resultado.show { visibility: visible; }
+
+    .start-screen {
+      background: rgba(0,0,0,0.4);
+      padding: 2rem;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      font-size: 1.4rem;
+    }
+
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: #fff;
+      font-size: 1em;
+      user-select: none;
+      pointer-events: none;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TELA DE INÍCIO -->
+  <div class="start-screen" id="startScreen">
+    🎄 Bem-vindo ao Sorteio de Natal 🎁 <br><br>
+    <button id="btnStart">Entrar</button>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="container" id="app">
+    <h1>🎅 Sorteio de Natal 🎁</h1>
+    <input id="nomePessoa" placeholder="Seu nome" style="margin-bottom: 1rem; padding: .5rem; width: 100%; border-radius: 8px;">
+    <button id="btnSortear">Sortear</button>
+    <div id="resultado" class="resultado"></div>
+  </div>
+
+  <!-- Áudios -->
+  <audio id="musicaAmbiente" src="sino.mp3" loop></audio>
+  <audio id="somNotificacao" src="notification.mp3"></audio>
+
+<script>
+  const API = "http://localhost:3000";
+
+  const startScreen = document.getElementById("startScreen");
+  const app = document.getElementById("app");
+  const musica = document.getElementById("musicaAmbiente");
+  const notificacao = document.getElementById("somNotificacao");
+
+  // ENTRAR → INICIA MÚSICA
+  document.getElementById("btnStart").addEventListener("click", () => {
+    musica.volume = 1;
+    musica.play().catch(()=>{});
+    startScreen.style.display = "none";
+    app.style.display = "block";
+  });
+
+  // SORTEIO
+  document.getElementById("btnSortear").addEventListener("click", async () => {
+    const nomePessoa = document.getElementById("nomePessoa").value.trim();
+    if (!nomePessoa) { alert("Digite seu nome antes de sortear!"); return; }
+
+    const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
+    const data = await res.json();
+
+    const resultado = document.getElementById("resultado");
+    resultado.textContent = data.nome || data.mensagem;
+    resultado.classList.add("show");
+
+    notificacao.currentTime = 0;
+    notificacao.play().catch(()=>{});
+
+    if (data.nome) {
+      document.getElementById("nomePessoa").style.display = "none";
+      document.getElementById("btnSortear").style.display = "none";
+      resultado.style.fontSize = "1.6rem";
+    }
+  });
+
+  // Neve
+  function criarNeve() {
+    const floco = document.createElement("div");
+    floco.textContent = "❄";
+    floco.classList.add("snowflake");
+    floco.style.left = Math.random() * 100 + "vw";
+    floco.style.animationDuration = Math.random() * 3 + 2 + "s";
+    floco.style.fontSize = Math.random() * 10 + 10 + "px";
+    document.body.appendChild(floco);
+    setTimeout(() => floco.remove(), 5000);
   }
+  setInterval(criarNeve, 200);
+</script>
 
-  h1 {
-    color: #b71c1c;
-    margin-bottom: 1rem;
-  }
-
-  button {
-    background-color: #d32f2f;
-    color: #fff;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: 0.3s;
-  }
-
-  button:hover {
-    background-color: #b71c1c;
-    transform: scale(1.05);
-  }
-
-  .resultado {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    border-radius: 10px;
-    background: #fff8e1;
-    color: #b71c1c;
-    font-weight: bold;
-    font-size: 1.3rem;
-    animation: aparecer 0.5s ease-in-out;
-  }
-
-  #resultado {
-    visibility: hidden;
-  }
-
-  #resultado.show {
-    visibility: visible;
-  }
-
-  @keyframes aparecer {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  /* Neve caindo */
-  .snowflake {
-    position: fixed;
-    top: -10px;
-    color: #fff;
-    font-size: 1em;
-    user-select: none;
-    pointer-events: none;
-    animation: fall linear infinite;
-  }
-
-  @keyframes fall {
-    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-  }
-</style>
-
-
-  </head>
-  <body>
-    <div class="container">
-      <h1>🎅 Sorteio de Natal 🎁</h1>
-      <input id="nomePessoa" placeholder="Seu nome" style="margin-bottom: 1rem; padding: .5rem; width: 100%; border-radius: 8px;">
-      <button id="btnSortear">Sortear</button>
-      <div id="resultado" class="resultado"></div>
-    </div>
-
-
-    <audio id="musicaAmbiente" src="sino.mp3" autoplay loop muted></audio>
-    <audio id="somNotificacao" src="notification.mp3"></audio>
-
-
-    <script>
-      const API = "http://localhost:3000";
-      const btnSortear = document.getElementById("btnSortear");
-      const resultado = document.getElementById("resultado");
-      const musicaAmbiente = document.getElementById("musicaAmbiente");
-      const somNotificacao = document.getElementById("somNotificacao");
-
-      // Ativa música ambiente no primeiro clique na página (obrigatório por autoplay policy)
-      document.addEventListener("click", () => {
-        musicaAmbiente.muted = false;
-      }, { once: true });
-
-      btnSortear.addEventListener("click", async () => {
-        const nomePessoa = document.getElementById("nomePessoa").value.trim();
-
-        if (!nomePessoa) {
-          alert("Digite seu nome antes de sortear!");
-          return;
-        }
-
-        const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
-        const data = await res.json();
-
-        resultado.classList.add("show");
-        resultado.textContent = data.nome || data.mensagem;
-
-        // Toca som de notificação no momento exato do sorteio
-        somNotificacao.currentTime = 0;
-        somNotificacao.play().catch(() => {});
-
-        // Se já sorteou alguém, desativa novo sorteio
-        if (data.nome) {
-          document.getElementById("nomePessoa").style.display = "none";
-          btnSortear.style.display = "none";
-          resultado.style.marginTop = "2rem";
-          resultado.style.fontSize = "1.6rem";
-        }
-      });
-
-      // Efeito Neve
-      function criarNeve() {
-        const floco = document.createElement("div");
-        floco.textContent = "❄";
-        floco.classList.add("snowflake");
-        floco.style.left = Math.random() * 100 + "vw";
-        floco.style.animationDuration = Math.random() * 3 + 2 + "s";
-        floco.style.fontSize = Math.random() * 10 + 10 + "px";
-        document.body.appendChild(floco);
-        setTimeout(() => floco.remove(), 5000);
-      }
-      setInterval(criarNeve, 200);
-    </script>
-
-
-  </body>
+</body>
 </html>
