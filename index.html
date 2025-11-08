@@ -89,6 +89,7 @@
   <body>
     <div class="container">
       <h1>🎅 Sorteio de Natal 🎁</h1>
+      <input id="nomePessoa" placeholder="Seu nome" style="margin-bottom: 1rem; padding: .5rem; width: 100%; border-radius: 8px;">
       <button id="btnSortear">Sortear</button>
       <div id="resultado" class="resultado" style="display: none"></div>
     </div>
@@ -103,11 +104,19 @@
   const somSino = document.getElementById("somSino");
 
   btnSortear.addEventListener("click", async () => {
-    const res = await fetch(`${API}/draw`);
+    const nomePessoa = document.getElementById("nomePessoa").value.trim();
+
+    if (!nomePessoa) {
+      alert("Digite seu nome antes de sortear!");
+      return;
+    }
+
+    const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
     const data = await res.json();
 
     resultado.style.display = "block";
     resultado.textContent = data.nome || data.mensagem;
+    somSino.currentTime = 0;
     somSino.play();
   });
 

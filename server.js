@@ -41,26 +41,28 @@ if (!db.data.participantes || db.data.participantes.length === 0) {
 
 // Rota para sortear um participante
 app.get("/draw", (req, res) => {
-    db.read();
-    const naoSorteados = db.data.participantes.filter((p) => !p.sorteado);
+  db.read();
 
-    if (naoSorteados.length === 0) {
-        return res.json({ mensagem: "Todos já foram sorteados! 🎅" });
-    }
+  const quemSorteia = (req.query.quem || "").trim();
 
-    const sorteado =
-    naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
-    sorteado.sorteado = true;
-    db.write();
+  if (!quemSorteia) {
+    return res.status(400).json({ mensagem: "Nome de quem sorteia é obrigatório." });
+  }
 
-    res.json({ nome: sorteado.nome });
-    });
+  // Remove quem está sorteando da lista de possíveis sorteados
+  const naoSorteados = db.data.participantes.filter(
+    (p) => !p.sorteado && p.nome.toLowerCase() !== quemSorteia.toLowerCase()
+  );
 
-    // Rota opcional para reiniciar o sorteio
-    app.get("/reset", (req, res) => {
-    db.data.participantes.forEach((p) => (p.sorteado = false));
-    db.write();
-    res.json({ mensagem: "Sorteio reiniciado com sucesso! 🎁" });
+  if (naoSorteados.length === 0) {
+    return res.json({ mensagem: "Não há ninguém disponível para sortear (ou você foi o último). 🎅" });
+  }
+
+  const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
+  sorteado.sorteado = true;
+  db.write();
+
+  res.json({ nome: sorteado.nome });
 });
 
 app.listen(3000, () => console.log("🎄 Servidor rodando na porta 3000"));
