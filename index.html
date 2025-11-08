@@ -119,8 +119,6 @@
           return;
         }
 
-        btnSortear.disabled = true; // impede outra tentativa
-
         const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
         const data = await res.json();
 
@@ -130,10 +128,18 @@
         somSino.currentTime = 0;
         somSino.play().catch(() => {});
 
-        // se a pessoa NÃO sorteou ainda, reabilita o botão
-        if (data.nome) btnSortear.disabled = true;
-        else btnSortear.disabled = false;
+        // === NOVO: BLOQUEAR TELA APÓS SORTEAR ===
+        if (data.nome) {
+          // esconde input e botão
+          document.getElementById("nomePessoa").style.display = "none";
+          btnSortear.style.display = "none";
+
+          // fixa mensagem dizendo "Seu sorteio já foi feito"
+          resultado.style.marginTop = "2rem";
+          resultado.style.fontSize = "1.6rem";
+        }
       });
+
 
 
       // Efeito de neve
