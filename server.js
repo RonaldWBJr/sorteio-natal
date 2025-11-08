@@ -17,24 +17,24 @@ db.read();
 if (!db.data.participantes || db.data.participantes.length === 0) {
     db.data.participantes = [
         // Coloque os nomes dos participantes abaixo:
-        { nome: "Lucas", sorteado: false },
-        { nome: "Gustavo", sorteado: false },
-        { nome: "Daniel", sorteado: false },
-        { nome: "Priscila", sorteado: false },
-        { nome: "Patricia", sorteado: false },
-        { nome: "Jhow", sorteado: false },
-        { nome: "Danielle", sorteado: false },
-        { nome: "Gabrielle", sorteado: false },
-        { nome: "Raquel", sorteado: false },
-        { nome: "Roninho", sorteado: false },
-        { nome: "Beatriz (namorada roninho)", sorteado: false },
-        { nome: "Guilherme", sorteado: false },
-        { nome: "Alice", sorteado: false },
-        { nome: "Muriel", sorteado: false },
-        { nome: "Guigu", sorteado: false },
-        { nome: "Arleide", sorteado: false },
-        { nome: "Isaias", sorteado: false },
-        { nome: "Vó Branca", sorteado: false },
+        { nome: "Lucas", sorteado: false, jaSorteou: false },
+        { nome: "Gustavo", sorteado: false, jaSorteou: false },
+        { nome: "Daniel Domingos", sorteado: false, jaSorteou: false },
+        { nome: "Priscila", sorteado: false, jaSorteou: false },
+        { nome: "Patricia", sorteado: false, jaSorteou: false },
+        { nome: "Daniel Mello", sorteado: false, jaSorteou: false },
+        { nome: "Danielle", sorteado: false, jaSorteou: false },
+        { nome: "Gabrielle", sorteado: false, jaSorteou: false },
+        { nome: "Raquel", sorteado: false, jaSorteou: false },
+        { nome: "Ronald", sorteado: false, jaSorteou: false },
+        { nome: "Beatriz", sorteado: false, jaSorteou: false },
+        { nome: "Guilherme", sorteado: false, jaSorteou: false },
+        { nome: "Alice", sorteado: false, jaSorteou: false },
+        { nome: "Muriel", sorteado: false, jaSorteou: false },
+        { nome: "Guigu", sorteado: false, jaSorteou: false },
+        { nome: "Arleide", sorteado: false, jaSorteou: false },
+        { nome: "Isaias", sorteado: false, jaSorteou: false },
+        { nome: "Vó Branca", sorteado: false, jaSorteou: false },
     ];
     db.write();
 }
@@ -49,17 +49,36 @@ app.get("/draw", (req, res) => {
     return res.status(400).json({ mensagem: "Nome de quem sorteia é obrigatório." });
   }
 
-  // Remove quem está sorteando da lista de possíveis sorteados
+  const participante = db.data.participantes.find(
+    (p) => p.nome.toLowerCase() === quemSorteia.toLowerCase()
+  );
+
+  if (!particIpante) {
+    return res.status(400).json({ mensagem: "Esse nome não está na lista de participantes!" });
+  }
+
+  // VERIFICA SE JÁ SORTEOU ANTES
+  if (particIpante.jaSorteou) {
+    return res.json({ mensagem: "Você já fez seu sorteio! ❌" });
+  }
+
+  // Lista de quem ainda pode ser sorteado (exclui quem sorteia)
   const naoSorteados = db.data.participantes.filter(
     (p) => !p.sorteado && p.nome.toLowerCase() !== quemSorteia.toLowerCase()
   );
 
   if (naoSorteados.length === 0) {
-    return res.json({ mensagem: "Não há ninguém disponível para sortear (ou você foi o último). 🎅" });
+    return res.json({ mensagem: "Não há mais ninguém disponível para sortear! 🎅" });
   }
 
   const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
+
+  // MARCA QUEM FOI SORTEADO
   sorteado.sorteado = true;
+
+  // MARCA QUE ESSA PESSOA JÁ FEZ O SORTEIO
+  particIpante.jaSorteou = true;
+
   db.write();
 
   res.json({ nome: sorteado.nome });

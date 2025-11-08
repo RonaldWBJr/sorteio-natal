@@ -2,75 +2,75 @@
   "participantes": [
     {
       "nome": "Lucas",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Gustavo",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Priscila",
-      "sorteado": true
+      "sorteado": false
     },
     {
-      "nome": "Daniel (Pri)",
-      "sorteado": true
+      "nome": "Daniel Domingos",
+      "sorteado": false
     },
     {
       "nome": "Patricia",
-      "sorteado": true
+      "sorteado": false
     },
     {
-      "nome": "Daniel (Paty)",
-      "sorteado": true
+      "nome": "Daniel Mello",
+      "sorteado": false
     },
     {
       "nome": "Danielle",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Gabrielle",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Roninho",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Beatriz",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Raquel",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Guilherme",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Guigu",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Alice",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Muriel",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Arleide",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Isaias",
-      "sorteado": true
+      "sorteado": false
     },
     {
       "nome": "Branca",
-      "sorteado": true
+      "sorteado": false
     }
   ]
 }
