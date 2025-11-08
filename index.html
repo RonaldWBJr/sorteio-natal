@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sorteio de Natal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <audio id="bellSound" 
+    src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6f7a55d80b.mp3?filename=christmas-bells-109274.mp3" 
+    preload="auto">
+  </audio>
+
+  <div class="card">
+    <h1>🎄 Sorteio de Natal 🎁</h1>
+    <p>Digite seu nome abaixo e participe do sorteio. Cada dispositivo pode sortear apenas uma vez!</p>
+
+    <input id="name" placeholder="Digite seu nome" />
+    <button id="drawBtn">Sortear Agora</button>
+
+    <hr />
+
+    <h3>🎅 Lista de participantes</h3>
+    <pre id="list">Carregando...</pre>
+
+    <hr />
+
+    <p>Este dispositivo só poderá sortear uma vez. Boa sorte! 🍀</p>
+    <div id="result"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
