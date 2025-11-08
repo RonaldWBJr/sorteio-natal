@@ -18,10 +18,23 @@ if (!db.data.participantes || db.data.participantes.length === 0) {
     db.data.participantes = [
         // Coloque os nomes dos participantes abaixo:
         { nome: "Lucas", sorteado: false },
-        { nome: "João", sorteado: false },
-        { nome: "Carlos", sorteado: false },
-        { nome: "Joana", sorteado: false },
-        { nome: "Lara", sorteado: false },
+        { nome: "Gustavo", sorteado: false },
+        { nome: "Daniel", sorteado: false },
+        { nome: "Priscila", sorteado: false },
+        { nome: "Patricia", sorteado: false },
+        { nome: "Jhow", sorteado: false },
+        { nome: "Danielle", sorteado: false },
+        { nome: "Gabrielle", sorteado: false },
+        { nome: "Raquel", sorteado: false },
+        { nome: "Roninho", sorteado: false },
+        { nome: "Beatriz (namorada roninho)", sorteado: false },
+        { nome: "Guilherme", sorteado: false },
+        { nome: "Alice", sorteado: false },
+        { nome: "Muriel", sorteado: false },
+        { nome: "Guigu", sorteado: false },
+        { nome: "Arleide", sorteado: false },
+        { nome: "Isaias", sorteado: false },
+        { nome: "Vó Branca", sorteado: false },
     ];
     db.write();
 }

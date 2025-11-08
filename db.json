@@ -2,23 +2,75 @@
   "participantes": [
     {
       "nome": "Lucas",
-      "sorteado": false
+      "sorteado": true
     },
     {
-      "nome": "João",
-      "sorteado": false
+      "nome": "Gustavo",
+      "sorteado": true
     },
     {
-      "nome": "Carlos",
-      "sorteado": false
+      "nome": "Priscila",
+      "sorteado": true
     },
     {
-      "nome": "Joana",
-      "sorteado": false
+      "nome": "Daniel (Pri)",
+      "sorteado": true
     },
     {
-      "nome": "Lara",
-      "sorteado": false
+      "nome": "Patricia",
+      "sorteado": true
+    },
+    {
+      "nome": "Daniel (Paty)",
+      "sorteado": true
+    },
+    {
+      "nome": "Danielle",
+      "sorteado": true
+    },
+    {
+      "nome": "Gabrielle",
+      "sorteado": true
+    },
+    {
+      "nome": "Roninho",
+      "sorteado": true
+    },
+    {
+      "nome": "Beatriz",
+      "sorteado": true
+    },
+    {
+      "nome": "Raquel",
+      "sorteado": true
+    },
+    {
+      "nome": "Guilherme",
+      "sorteado": true
+    },
+    {
+      "nome": "Guigu",
+      "sorteado": true
+    },
+    {
+      "nome": "Alice",
+      "sorteado": true
+    },
+    {
+      "nome": "Muriel",
+      "sorteado": true
+    },
+    {
+      "nome": "Arleide",
+      "sorteado": true
+    },
+    {
+      "nome": "Isaias",
+      "sorteado": true
+    },
+    {
+      "nome": "Branca",
+      "sorteado": true
     }
   ]
 }
