@@ -53,12 +53,12 @@ app.get("/draw", (req, res) => {
     (p) => p.nome.toLowerCase() === quemSorteia.toLowerCase()
   );
 
-  if (!particIpante) {
+  if (!participante) {
     return res.status(400).json({ mensagem: "Esse nome não está na lista de participantes!" });
   }
 
   // VERIFICA SE JÁ SORTEOU ANTES
-  if (particIpante.jaSorteou) {
+  if (participante.jaSorteou) {
     return res.json({ mensagem: "Você já fez seu sorteio! ❌" });
   }
 
@@ -77,11 +77,12 @@ app.get("/draw", (req, res) => {
   sorteado.sorteado = true;
 
   // MARCA QUE ESSA PESSOA JÁ FEZ O SORTEIO
-  particIpante.jaSorteou = true;
+  participante.jaSorteou = true;
 
   db.write();
 
   res.json({ nome: sorteado.nome });
 });
+
 
 app.listen(3000, () => console.log("🎄 Servidor rodando na porta 3000"));
