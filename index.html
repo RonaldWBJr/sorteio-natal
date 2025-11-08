@@ -30,6 +30,36 @@
     <div id="result"></div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+
+    const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
+    const btnSortear = document.getElementById("btnSortear");
+    const resultado = document.getElementById("resultado");
+    const somSino = document.getElementById("somSino");
+
+    btnSortear.addEventListener("click", async () => {
+      const res = await fetch(`${API}/draw`);
+      const data = await res.json();
+
+      resultado.style.display = "block";
+      resultado.textContent = data.nome || data.mensagem;
+      somSino.play();
+    });
+
+    // Efeito de neve
+    function criarNeve() {
+      const floco = document.createElement("div");
+      floco.textContent = "❄";
+      floco.classList.add("snowflake");
+      floco.style.left = Math.random() * 100 + "vw";
+      floco.style.animationDuration = Math.random() * 3 + 2 + "s";
+      floco.style.fontSize = Math.random() * 10 + 10 + "px";
+      document.body.appendChild(floco);
+      setTimeout(() => floco.remove(), 5000);
+    }
+
+    setInterval(criarNeve, 200);
+
+  </script>
 </body>
 </html>
