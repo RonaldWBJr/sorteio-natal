@@ -62,6 +62,14 @@
     animation: aparecer 0.5s ease-in-out;
   }
 
+  #resultado {
+    display: none;
+  }
+
+  #resultado.show {
+    display: block;
+  }
+
   @keyframes aparecer {
     from { opacity: 0; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
@@ -91,49 +99,49 @@
       <h1>🎅 Sorteio de Natal 🎁</h1>
       <input id="nomePessoa" placeholder="Seu nome" style="margin-bottom: 1rem; padding: .5rem; width: 100%; border-radius: 8px;">
       <button id="btnSortear">Sortear</button>
-      <div id="resultado" class="resultado" style="display: none"></div>
+      <div id="resultado" class="resultado"></div>
     </div>
 
 
-<audio id="somSino" src="https://cdn.pixabay.com/download/audio/2021/09/20/audio_84e4b6aaf9.mp3" preload="auto"></audio>
+    <audio id="somSino" src="https://cdn.pixabay.com/download/audio/2021/09/20/audio_84e4b6aaf9.mp3" preload="auto"></audio>
 
-<script>
-  const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
-  const btnSortear = document.getElementById("btnSortear");
-  const resultado = document.getElementById("resultado");
-  const somSino = document.getElementById("somSino");
+    <script>
+      const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
+      const btnSortear = document.getElementById("btnSortear");
+      const resultado = document.getElementById("resultado");
+      const somSino = document.getElementById("somSino");
 
-  btnSortear.addEventListener("click", async () => {
-    const nomePessoa = document.getElementById("nomePessoa").value.trim();
+      btnSortear.addEventListener("click", async () => {
+        const nomePessoa = document.getElementById("nomePessoa").value.trim();
 
-    if (!nomePessoa) {
-      alert("Digite seu nome antes de sortear!");
-      return;
-    }
+        if (!nomePessoa) {
+          alert("Digite seu nome antes de sortear!");
+          return;
+        }
 
-    const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
-    const data = await res.json();
+        const res = await fetch(`${API}/draw?quem=${encodeURIComponent(nomePessoa)}`);
+        const data = await res.json();
 
-    resultado.style.display = "block";
-    resultado.textContent = data.nome || data.mensagem;
-    somSino.currentTime = 0;
-    somSino.play();
-  });
+        resultado.classList.add("show");
+        resultado.textContent = data.nome || data.mensagem;
+        somSino.currentTime = 0;
+        somSino.play().catch(() => {});
+      });
 
-  // Efeito de neve
-  function criarNeve() {
-    const floco = document.createElement("div");
-    floco.textContent = "❄";
-    floco.classList.add("snowflake");
-    floco.style.left = Math.random() * 100 + "vw";
-    floco.style.animationDuration = Math.random() * 3 + 2 + "s";
-    floco.style.fontSize = Math.random() * 10 + 10 + "px";
-    document.body.appendChild(floco);
-    setTimeout(() => floco.remove(), 5000);
-  }
+      // Efeito de neve
+      function criarNeve() {
+        const floco = document.createElement("div");
+        floco.textContent = "❄";
+        floco.classList.add("snowflake");
+        floco.style.left = Math.random() * 100 + "vw";
+        floco.style.animationDuration = Math.random() * 3 + 2 + "s";
+        floco.style.fontSize = Math.random() * 10 + 10 + "px";
+        document.body.appendChild(floco);
+        setTimeout(() => floco.remove(), 5000);
+      }
 
-  setInterval(criarNeve, 200);
-</script>
+      setInterval(criarNeve, 200);
+    </script>
 
 
   </body>
