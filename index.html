@@ -1,65 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sorteio de Natal</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <audio id="bellSound" 
-    src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6f7a55d80b.mp3?filename=christmas-bells-109274.mp3" 
-    preload="auto">
-  </audio>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorteio de Natal 🎅</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #d32f2f, #ff6659);
+        color: #333;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
 
-  <div class="card">
-    <h1>🎄 Sorteio de Natal 🎁</h1>
-    <p>Digite seu nome abaixo e participe do sorteio. Cada dispositivo pode sortear apenas uma vez!</p>
 
-    <input id="name" placeholder="Digite seu nome" />
-    <button id="drawBtn">Sortear Agora</button>
+  .container {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+  }
 
-    <hr />
+  h1 {
+    color: #b71c1c;
+    margin-bottom: 1rem;
+  }
 
-    <h3>🎅 Lista de participantes</h3>
-    <pre id="list">Carregando...</pre>
+  button {
+    background-color: #d32f2f;
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: 0.3s;
+  }
 
-    <hr />
+  button:hover {
+    background-color: #b71c1c;
+    transform: scale(1.05);
+  }
 
-    <p>Este dispositivo só poderá sortear uma vez. Boa sorte! 🍀</p>
-    <div id="result"></div>
-  </div>
+  .resultado {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 10px;
+    background: #fff8e1;
+    color: #b71c1c;
+    font-weight: bold;
+    font-size: 1.3rem;
+    animation: aparecer 0.5s ease-in-out;
+  }
 
-  <script>
+  @keyframes aparecer {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
 
-    const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
-    const btnSortear = document.getElementById("btnSortear");
-    const resultado = document.getElementById("resultado");
-    const somSino = document.getElementById("somSino");
+  /* Neve caindo */
+  .snowflake {
+    position: fixed;
+    top: -10px;
+    color: #fff;
+    font-size: 1em;
+    user-select: none;
+    pointer-events: none;
+    animation: fall linear infinite;
+  }
 
-    btnSortear.addEventListener("click", async () => {
-      const res = await fetch(`${API}/draw`);
-      const data = await res.json();
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+  }
+</style>
 
-      resultado.style.display = "block";
-      resultado.textContent = data.nome || data.mensagem;
-      somSino.play();
-    });
 
-    // Efeito de neve
-    function criarNeve() {
-      const floco = document.createElement("div");
-      floco.textContent = "❄";
-      floco.classList.add("snowflake");
-      floco.style.left = Math.random() * 100 + "vw";
-      floco.style.animationDuration = Math.random() * 3 + 2 + "s";
-      floco.style.fontSize = Math.random() * 10 + 10 + "px";
-      document.body.appendChild(floco);
-      setTimeout(() => floco.remove(), 5000);
-    }
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎅 Sorteio de Natal 🎁</h1>
+      <button id="btnSortear">Sortear</button>
+      <div id="resultado" class="resultado" style="display: none"></div>
+    </div>
 
-    setInterval(criarNeve, 200);
 
-  </script>
-</body>
+<audio id="somSino" src="https://cdn.pixabay.com/download/audio/2021/09/20/audio_84e4b6aaf9.mp3" preload="auto"></audio>
+
+<script>
+  const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
+  const btnSortear = document.getElementById("btnSortear");
+  const resultado = document.getElementById("resultado");
+  const somSino = document.getElementById("somSino");
+
+  btnSortear.addEventListener("click", async () => {
+    const res = await fetch(`${API}/draw`);
+    const data = await res.json();
+
+    resultado.style.display = "block";
+    resultado.textContent = data.nome || data.mensagem;
+    somSino.play();
+  });
+
+  // Efeito de neve
+  function criarNeve() {
+    const floco = document.createElement("div");
+    floco.textContent = "❄";
+    floco.classList.add("snowflake");
+    floco.style.left = Math.random() * 100 + "vw";
+    floco.style.animationDuration = Math.random() * 3 + 2 + "s";
+    floco.style.fontSize = Math.random() * 10 + 10 + "px";
+    document.body.appendChild(floco);
+    setTimeout(() => floco.remove(), 5000);
+  }
+
+  setInterval(criarNeve, 200);
+</script>
+
+
+  </body>
 </html>
