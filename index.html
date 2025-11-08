@@ -103,13 +103,21 @@
     </div>
 
 
-    <audio id="somSino" src="sino.mp3" preload="auto"></audio>
+    <audio id="musicaAmbiente" src="sino.mp3" autoplay loop muted></audio>
+    <audio id="somNotificacao" src="notification.mp3"></audio>
+
 
     <script>
-      const API = "http://localhost:3000"; // altere se o backend estiver hospedado em outro lugar
+      const API = "http://localhost:3000";
       const btnSortear = document.getElementById("btnSortear");
       const resultado = document.getElementById("resultado");
-      const somSino = document.getElementById("somSino");
+      const musicaAmbiente = document.getElementById("musicaAmbiente");
+      const somNotificacao = document.getElementById("somNotificacao");
+
+      // Ativa música ambiente no primeiro clique na página (obrigatório por autoplay policy)
+      document.addEventListener("click", () => {
+        musicaAmbiente.muted = false;
+      }, { once: true });
 
       btnSortear.addEventListener("click", async () => {
         const nomePessoa = document.getElementById("nomePessoa").value.trim();
@@ -125,29 +133,20 @@
         resultado.classList.add("show");
         resultado.textContent = data.nome || data.mensagem;
 
-        somSino.pause();
-        somSino.currentTime = 0;
-        somSino.load();
+        // Toca som de notificação no momento exato do sorteio
+        somNotificacao.currentTime = 0;
+        somNotificacao.play().catch(() => {});
 
-        setTimeout(() => {
-          somSino.play().catch(() => {});
-        }, 100);
-        
-        // === NOVO: BLOQUEAR TELA APÓS SORTEAR ===
+        // Se já sorteou alguém, desativa novo sorteio
         if (data.nome) {
-          // esconde input e botão
           document.getElementById("nomePessoa").style.display = "none";
           btnSortear.style.display = "none";
-
-          // fixa mensagem dizendo "Seu sorteio já foi feito"
           resultado.style.marginTop = "2rem";
           resultado.style.fontSize = "1.6rem";
         }
       });
 
-
-
-      // Efeito de neve
+      // Efeito Neve
       function criarNeve() {
         const floco = document.createElement("div");
         floco.textContent = "❄";
@@ -158,7 +157,6 @@
         document.body.appendChild(floco);
         setTimeout(() => floco.remove(), 5000);
       }
-
       setInterval(criarNeve, 200);
     </script>
 
