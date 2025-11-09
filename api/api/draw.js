@@ -43,11 +43,11 @@ export default function handler(req, res) {
     if (participante.jaSorteou === true) {
       // Encontra quem foi sorteado por esta pessoa
       const pessoaSorteada = participantes.find(
-        p => p.sorteado === true && p.sortiadoPor === quemSorteia
+        (p) => p.sorteado === true && p.sortiadoPor === quemSorteia
       );
-      return res.status(200).json({ 
+      return res.status(200).json({
         mensagem: "Você já fez seu sorteio!",
-        sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined
+        sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined,
       });
     }
 

@@ -125,11 +125,48 @@
 
     <script>
       const API = "/api";
+      const STORAGE_KEY = "sorteio-natal-2023";
 
       const startScreen = document.getElementById("startScreen");
       const app = document.getElementById("app");
       const musica = document.getElementById("musicaAmbiente");
       const notificacao = document.getElementById("somNotificacao");
+
+      // Funções para gerenciar o localStorage
+      function getSorteioSalvo(nome) {
+        const sorteios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        return sorteios[normalize(nome)];
+      }
+
+      function salvarSorteio(quemSorteou, quemFoiSorteado) {
+        const sorteios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        sorteios[normalize(quemSorteou)] = quemFoiSorteado;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sorteios));
+      }
+
+      // Função para normalizar nomes (igual a do backend)
+      function normalize(str) {
+        return str
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      // Verifica sorteio ao digitar nome
+      document.getElementById("nomePessoa").addEventListener("input", (e) => {
+        const nome = e.target.value.trim();
+        if (nome) {
+          const sorteioSalvo = getSorteioSalvo(nome);
+          if (sorteioSalvo) {
+            const resultado = document.getElementById("resultado");
+            resultado.textContent = `Você já fez seu sorteio!\nVocê sorteou: ${sorteioSalvo}`;
+            resultado.classList.add("show");
+            document.getElementById("nomePessoa").style.display = "none";
+            document.getElementById("btnSortear").style.display = "none";
+            resultado.style.fontSize = "1.6rem";
+          }
+        }
+      });
 
       // ENTRAR → INICIA MÚSICA
       document.getElementById("btnStart").addEventListener("click", () => {
@@ -149,27 +186,39 @@
             return;
           }
 
+          // Verifica se já tem sorteio salvo
+          const sorteioSalvo = getSorteioSalvo(nomePessoa);
+          if (sorteioSalvo) {
+            const resultado = document.getElementById("resultado");
+            resultado.textContent = `Você já fez seu sorteio!\nVocê sorteou: ${sorteioSalvo}`;
+            resultado.classList.add("show");
+            document.getElementById("nomePessoa").style.display = "none";
+            document.getElementById("btnSortear").style.display = "none";
+            resultado.style.fontSize = "1.6rem";
+            return;
+          }
+
+          // Faz o sorteio
           const res = await fetch(
             `${API}/draw?quem=${encodeURIComponent(nomePessoa)}`
           );
           const data = await res.json();
 
           const resultado = document.getElementById("resultado");
-          if (data.mensagem && data.sorteado) {
-            resultado.textContent = `${data.mensagem}\nVocê sorteou: ${data.sorteado}`;
+          if (data.nome) {
+            // Salva o resultado no localStorage
+            salvarSorteio(nomePessoa, data.nome);
+            resultado.textContent = data.nome;
+            document.getElementById("nomePessoa").style.display = "none";
+            document.getElementById("btnSortear").style.display = "none";
+            resultado.style.fontSize = "1.6rem";
           } else {
-            resultado.textContent = data.nome || data.mensagem;
+            resultado.textContent = data.mensagem;
           }
           resultado.classList.add("show");
 
           notificacao.currentTime = 0;
           notificacao.play().catch(() => {});
-
-          if (data.nome) {
-            document.getElementById("nomePessoa").style.display = "none";
-            document.getElementById("btnSortear").style.display = "none";
-            resultado.style.fontSize = "1.6rem";
-          }
         });
 
       // Neve
