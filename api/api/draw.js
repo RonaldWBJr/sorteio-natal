@@ -1,4 +1,3 @@
-import { MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -10,38 +9,15 @@ function normalize(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-// Configuração do MongoDB
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
+// Carrega o arquivo JSON com os participantes
+function getParticipantes() {
+  const dataPath = join(process.cwd(), "api", "data", "sorteios.json");
+  const data = JSON.parse(readFileSync(dataPath, "utf8"));
+  return data.participantes || [];
+}
 
-export default async function handler(req, res) {
-  let session;
-
+export default function handler(req, res) {
   try {
-    await client.connect();
-    const db = client.db("sorteio-natal");
-    const collection = db.collection("participantes");
-
-    // Reinicia a coleção a cada deploy para garantir estado inicial
-    await collection.drop().catch(() => {}); // Ignora erro se a coleção não existir
-
-    const dataPath = join(process.cwd(), "api", "data", "sorteios.json");
-    const rawData = readFileSync(dataPath, "utf8");
-    const jsonData = JSON.parse(rawData);
-
-    // Garante que todos os participantes têm os campos corretos
-    const participantesIniciais = jsonData.participantes.map((p) => ({
-      nome: p.nome,
-      sorteado: false,
-      jaSorteou: false,
-    }));
-
-    await collection.insertMany(participantesIniciais);
-
-    // Cria índices necessários
-    await collection.createIndex({ nome: 1 });
-    await collection.createIndex({ sorteado: 1 });
-
     // Obtém o nome de quem está sorteando
     const quemSorteia = (req.query.quem || "").trim();
 
@@ -52,89 +28,50 @@ export default async function handler(req, res) {
       });
     }
 
-    // Inicia uma sessão para transação
-    session = client.startSession();
-    let sorteadoNome;
+    // Carrega os participantes
+    const participantes = getParticipantes();
 
-    await session.withTransaction(async () => {
-      // Encontra e bloqueia o participante que está sorteando
-      const participante = await collection.findOne(
-        {
-          nome: { $regex: new RegExp("^" + normalize(quemSorteia) + "$", "i") },
-          jaSorteou: false, // Garante que não sorteou ainda
-        },
-        { session }
-      );
+    // Encontra quem está sorteando
+    const participante = participantes.find(
+      (p) => normalize(p.nome) === normalize(quemSorteia)
+    );
 
-      if (!participante) {
-        const jaFezSorteio = await collection.findOne({
-          nome: { $regex: new RegExp("^" + normalize(quemSorteia) + "$", "i") },
-          jaSorteou: true,
-        });
-
-        if (jaFezSorteio) {
-          throw new Error("ALREADY_DRAWN");
-        } else {
-          throw new Error("NOT_FOUND");
-        }
-      }
-
-      // Filtra participantes disponíveis
-      const disponiveis = await collection
-        .find(
-          {
-            sorteado: false,
-            _id: { $ne: participante._id },
-          },
-          { session }
-        )
-        .toArray();
-
-      if (disponiveis.length === 0) {
-        throw new Error("NO_AVAILABLE");
-      }
-
-      // Realiza o sorteio
-      const sorteado =
-        disponiveis[Math.floor(Math.random() * disponiveis.length)];
-      sorteadoNome = sorteado.nome;
-
-      // Atualiza os status no MongoDB (dentro da transação)
-      await collection.updateOne(
-        { _id: participante._id },
-        { $set: { jaSorteou: true } },
-        { session }
-      );
-
-      await collection.updateOne(
-        { _id: sorteado._id },
-        { $set: { sorteado: true } },
-        { session }
-      );
-    });
-
-    // Se chegou aqui, a transação foi bem sucedida
-    return res.status(200).json({ nome: sorteadoNome });
-  } catch (error) {
-    if (error.message === "ALREADY_DRAWN") {
-      return res.status(200).json({ mensagem: "Você já fez seu sorteio!" });
-    } else if (error.message === "NOT_FOUND") {
-      return res
-        .status(400)
-        .json({ mensagem: "Nome não encontrado na lista!" });
-    } else if (error.message === "NO_AVAILABLE") {
-      return res
-        .status(200)
-        .json({ mensagem: "Não há mais ninguém disponível!" });
+    if (!participante) {
+      return res.status(400).json({
+        mensagem: "Nome não encontrado na lista!",
+      });
     }
+
+    if (participante.jaSorteou) {
+      return res.status(200).json({
+        mensagem: "Você já fez seu sorteio!",
+      });
+    }
+
+    // Filtra participantes disponíveis
+    const disponiveis = participantes.filter(
+      (p) => !p.sorteado && normalize(p.nome) !== normalize(quemSorteia)
+    );
+
+    if (disponiveis.length === 0) {
+      return res.status(200).json({
+        mensagem: "Não há mais ninguém disponível!",
+      });
+    }
+
+    // Realiza o sorteio
+    const sorteado =
+      disponiveis[Math.floor(Math.random() * disponiveis.length)];
+
+    // Atualiza os status
+    participante.jaSorteou = true;
+    sorteado.sorteado = true;
+
+    return res.status(200).json({ nome: sorteado.nome });
+  } catch (error) {
     console.error("Erro no sorteio:", error);
     return res.status(500).json({
       mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente.",
     });
-  } finally {
-    if (session) {
-      await session.endSession();
-    }
-    await client.close();
   }
 }
