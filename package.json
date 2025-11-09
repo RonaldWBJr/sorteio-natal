@@ -1,27 +1,27 @@
 {
   "name": "sorteio-natal",
   "version": "1.0.0",
-  "description": "",
-  "main": "script.js",
+  "description": "Aplicação de sorteio de Natal usando Express e LowDB",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-  "start": "node server.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RonaldWBJr/sorteio-natal.git"
+    "url": "https://github.com/RonaldWBJr/sorteio-natal.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "RonaldWBJr",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/RonaldWBJr/sorteio-natal/issues"
   },
   "homepage": "https://github.com/RonaldWBJr/sorteio-natal#readme",
   "dependencies": {
-    "body-parser": "^2.2.0",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^4.18.2",
     "lowdb": "^7.0.1"
   }
 }
