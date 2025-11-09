@@ -31,7 +31,7 @@ export default function handler(req, res) {
 
     // Encontra quem está sorteando
     const participante = participantes.find(
-      p => normalize(p.nome) === normalize(quemSorteia)
+      (p) => normalize(p.nome) === normalize(quemSorteia)
     );
 
     if (!participante) {
@@ -41,12 +41,19 @@ export default function handler(req, res) {
     }
 
     if (participante.jaSorteou === true) {
-      return res.status(200).json({ mensagem: "Você já fez seu sorteio!" });
+      // Encontra quem foi sorteado por esta pessoa
+      const pessoaSorteada = participantes.find(
+        p => p.sorteado === true && p.sortiadoPor === quemSorteia
+      );
+      return res.status(200).json({ 
+        mensagem: "Você já fez seu sorteio!",
+        sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined
+      });
     }
 
     // Filtra participantes disponíveis
     const disponiveis = participantes.filter(
-      p => p.sorteado !== true && normalize(p.nome) !== normalize(quemSorteia)
+      (p) => p.sorteado !== true && normalize(p.nome) !== normalize(quemSorteia)
     );
 
     if (disponiveis.length === 0) {
@@ -62,6 +69,7 @@ export default function handler(req, res) {
     // Atualiza os status em memória
     participante.jaSorteou = true;
     sorteado.sorteado = true;
+    sorteado.sortiadoPor = quemSorteia;
 
     // Retorna o nome sorteado
     return res.status(200).json({ nome: sorteado.nome });

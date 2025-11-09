@@ -58,6 +58,7 @@
         font-weight: bold;
         font-size: 1.3rem;
         visibility: hidden;
+        white-space: pre-line;
       }
       .resultado.show {
         visibility: visible;
@@ -154,7 +155,11 @@
           const data = await res.json();
 
           const resultado = document.getElementById("resultado");
-          resultado.textContent = data.nome || data.mensagem;
+          if (data.mensagem && data.sorteado) {
+            resultado.textContent = `${data.mensagem}\nVocê sorteou: ${data.sorteado}`;
+          } else {
+            resultado.textContent = data.nome || data.mensagem;
+          }
           resultado.classList.add("show");
 
           notificacao.currentTime = 0;
