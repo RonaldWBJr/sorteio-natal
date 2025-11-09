@@ -1,0 +1,22 @@
+{
+  "participantes": [
+    { "nome": "Lucas", "sorteado": false, "jaSorteou": false },
+    { "nome": "Gustavo", "sorteado": false, "jaSorteou": false },
+    { "nome": "Daniel Domingos", "sorteado": false, "jaSorteou": false },
+    { "nome": "Priscila", "sorteado": false, "jaSorteou": false },
+    { "nome": "Patricia", "sorteado": false, "jaSorteou": false },
+    { "nome": "Daniel Mello", "sorteado": false, "jaSorteou": false },
+    { "nome": "Danielle", "sorteado": false, "jaSorteou": false },
+    { "nome": "Gabrielle", "sorteado": false, "jaSorteou": false },
+    { "nome": "Raquel", "sorteado": false, "jaSorteou": false },
+    { "nome": "Ronald", "sorteado": false, "jaSorteou": false },
+    { "nome": "Beatriz", "sorteado": false, "jaSorteou": false },
+    { "nome": "Guilherme", "sorteado": false, "jaSorteou": false },
+    { "nome": "Alice", "sorteado": false, "jaSorteou": false },
+    { "nome": "Muriel", "sorteado": false, "jaSorteou": false },
+    { "nome": "Guigu", "sorteado": false, "jaSorteou": false },
+    { "nome": "Arleide", "sorteado": false, "jaSorteou": false },
+    { "nome": "Isaias", "sorteado": false, "jaSorteou": false },
+    { "nome": "Vó Branca", "sorteado": false, "jaSorteou": false }
+  ]
+}
