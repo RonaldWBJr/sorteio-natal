@@ -8,6 +8,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// 🔹 NOVO: serve arquivos estáticos (HTML, CSS, JS)
+app.use(express.static("public"));
+
+// 🔹 NOVO: define uma rota padrão (para não dar 404 na raiz)
+app.get("/", (req, res) => {
+  res.sendFile("index.html", { root: "public" });
+});
+
 const adapter = new JSONFileSync("db.json");
 const db = new LowSync(adapter, { participantes: [] });
 db.read();
@@ -49,7 +57,6 @@ app.get("/draw", (req, res) => {
     return res.status(400).json({ mensagem: "Nome é obrigatório." });
   }
 
-  // agora aceita parte do nome
   const participante = db.data.participantes.find((p) =>
     normalizar(p.nome).includes(quemSorteia)
   );
@@ -63,21 +70,20 @@ app.get("/draw", (req, res) => {
   }
 
   const naoSorteados = db.data.participantes.filter(
-    (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
-  );
+  (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
+);
 
-  if (naoSorteados.length === 0) {
-    return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
-  }
+if (naoSorteados.length === 0) {
+  return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
+}
 
-  const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
+// ✅ Corrigido:
+const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
 
-  participante.jaSorteou = true;
-  sorteado.sorteado = true;
+participante.jaSorteou = true;
+sorteado.sorteado = true;
 
-  db.write();
+db.write();
 
-  res.json({ nome: sorteado.nome });
-});
-
-app.listen(3000, () => console.log("✅ Servidor no ar na porta 3000"));
+res.json({ nome: sorteado.nome });
+})

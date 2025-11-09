@@ -5,8 +5,8 @@
   "main": "script.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
+    "build": "echo 'Build não necessário - app Node puro'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
