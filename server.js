@@ -3,20 +3,24 @@ import { LowSync } from "lowdb";
 import { JSONFileSync } from "lowdb/node";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 🔹 NOVO: serve arquivos estáticos (HTML, CSS, JS)
-app.use(express.static("public"));
+// Determina o caminho do db.json baseado no ambiente
+const dbPath = process.env.VERCEL ? '/tmp/db.json' : 'db.json';
 
-// 🔹 NOVO: define uma rota padrão (para não dar 404 na raiz)
-app.get("/", (req, res) => {
-  res.sendFile("index.html", { root: "public" });
-});
+// Se estiver no Vercel e o arquivo não existir em /tmp, inicializa
+if (process.env.VERCEL && !fs.existsSync(dbPath)) {
+  const initialData = { participantes: [] };
+  fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
+}
 
-const adapter = new JSONFileSync("db.json");
+const adapter = new JSONFileSync(dbPath);
 const db = new LowSync(adapter, { participantes: [] });
 db.read();
 
@@ -57,6 +61,7 @@ app.get("/draw", (req, res) => {
     return res.status(400).json({ mensagem: "Nome é obrigatório." });
   }
 
+  // agora aceita parte do nome
   const participante = db.data.participantes.find((p) =>
     normalizar(p.nome).includes(quemSorteia)
   );
@@ -70,20 +75,27 @@ app.get("/draw", (req, res) => {
   }
 
   const naoSorteados = db.data.participantes.filter(
-  (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
-);
+    (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
+  );
 
-if (naoSorteados.length === 0) {
-  return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
+  if (naoSorteados.length === 0) {
+    return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
+  }
+
+  const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
+
+  participante.jaSorteou = true;
+  sorteado.sorteado = true;
+
+  db.write();
+
+  res.json({ nome: sorteado.nome });
+});
+
+// Exporta o handler para uso no Vercel
+export default app;
+
+// Inicia o servidor apenas em ambiente local
+if (!process.env.VERCEL) {
+  app.listen(3000, () => console.log("✅ Servidor no ar na porta 3000"));
 }
-
-// ✅ Corrigido:
-const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
-
-participante.jaSorteou = true;
-sorteado.sorteado = true;
-
-db.write();
-
-res.json({ nome: sorteado.nome });
-})
