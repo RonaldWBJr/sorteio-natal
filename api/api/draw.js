@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -17,19 +17,19 @@ const client = new MongoClient(uri);
 export default async function handler(req, res) {
   try {
     await client.connect();
-    const db = client.db('sorteio-natal');
-    const collection = db.collection('participantes');
-    
+    const db = client.db("sorteio-natal");
+    const collection = db.collection("participantes");
+
     // Verifica se já tem dados no MongoDB, se não, carrega do JSON
     const count = await collection.countDocuments();
-    
+
     if (count === 0) {
       const dataPath = join(process.cwd(), "api", "data", "sorteios.json");
       const rawData = readFileSync(dataPath, "utf8");
       const jsonData = JSON.parse(rawData);
       await collection.insertMany(jsonData.participantes);
     }
-    
+
     // Carrega os dados do MongoDB
     const participantes = await collection.find({}).toArray();
 
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
     // Encontra o participante que está sorteando
     const participante = await collection.findOne({
-      nome: { $regex: new RegExp('^' + normalize(quemSorteia) + '$', 'i') }
+      nome: { $regex: new RegExp("^" + normalize(quemSorteia) + "$", "i") },
     });
 
     if (!participante) {
@@ -63,10 +63,12 @@ export default async function handler(req, res) {
     }
 
     // Filtra participantes disponíveis
-    const disponiveis = await collection.find({
-      sorteado: false,
-      nome: { $ne: participante.nome }
-    }).toArray();
+    const disponiveis = await collection
+      .find({
+        sorteado: false,
+        nome: { $ne: participante.nome },
+      })
+      .toArray();
 
     if (disponiveis.length === 0) {
       await client.close();
@@ -76,7 +78,8 @@ export default async function handler(req, res) {
     }
 
     // Realiza o sorteio
-    const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+    const sorteado =
+      disponiveis[Math.floor(Math.random() * disponiveis.length)];
 
     // Atualiza os status no MongoDB
     await collection.updateOne(
