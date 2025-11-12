@@ -1,12 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { "src": "/api/draw", "dest": "/api/draw.js" }
-  ]
+  "builds": [{ "src": "api/api/*.js", "use": "@vercel/node" }],
+  "routes": [{ "src": "/api/draw", "dest": "/api/api/draw.js" }]
 }
