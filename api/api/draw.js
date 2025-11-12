@@ -90,7 +90,6 @@ export default function handler(req, res) {
     sorteado.sorteado = true;
     sorteado.sorteadoPor = quemSorteia;
 
-    writeFileSync(dataPath, JSON.stringify({ participantes }, null, 2), "utf8");
 
     return res.status(200).json({ nome: sorteado.nome });
   } catch (error) {
