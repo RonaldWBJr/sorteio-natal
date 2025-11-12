@@ -1,49 +1,74 @@
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
-// Função para normalizar strings (remover acentos e converter para minúsculas)
-function normalize(str) {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+const ADMIN_KEY = process.env.ADMIN_KEY;
+if (req.headers["x-admin-key"] !== ADMIN_KEY) {
+  return res.status(403).json({ erro: "Acesso restrito a desenvolvedor." });
 }
 
-// Armazena os participantes em memória
+
+const dataPath = join(process.cwd(), "api", "data", "sorteios.json");
 let participantes = null;
+
+function normalize(str = "") {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// --- helper de proteção dev-only ---
+function assertDevOnly(req, res) {
+  const provided =
+    req.headers["x-admin-key"] ||
+    req.headers["x-admin-key".toLowerCase()] ||
+    req.query.key;
+
+  if (!process.env.ADMIN_KEY || provided !== process.env.ADMIN_KEY) {
+    return res
+      .status(403)
+      .json({ erro: "Acesso restrito. Falha na autenticação de desenvolvedor." });
+  }
+  return null;
+}
 
 export default function handler(req, res) {
   try {
-    // Se ainda não carregou os participantes, carrega do arquivo
     if (!participantes) {
-      const dataPath = join(process.cwd(), "api", "data", "sorteios.json");
       const jsonData = JSON.parse(readFileSync(dataPath, "utf8"));
-      participantes = jsonData.participantes;
+      participantes = jsonData.participantes || [];
     }
 
-    // Obtém o nome de quem está sorteando
-    const quemSorteia = (req.query.quem || "").trim();
+    // ====== DEV-ONLY: listar pares ======
+    if (req.method === "GET" && req.query.acao === "pares") {
+      const denied = assertDevOnly(req, res);
+      if (denied) return; // 403 já enviado
 
-    // Validações
+      const pares = participantes
+        .filter((p) => p.jaSorteou && p.sorteou)
+        .map((p) => ({ quem: p.nome, tirou: p.sorteou }));
+
+      const pendentes = {
+        aindaNaoSortearam: participantes.filter((p) => !p.jaSorteou).map((p) => p.nome),
+        aindaNaoForamSorteados: participantes.filter((p) => !p.sorteado).map((p) => p.nome),
+      };
+
+      return res.status(200).json({ pares, pendentes });
+    }
+
+    // ====== SORTEIO NORMAL ======
+    const quemSorteia = (req.query.quem || "").trim();
     if (!quemSorteia) {
       return res.status(400).json({ mensagem: "Nome é obrigatório." });
     }
 
-    // Encontra quem está sorteando
     const participante = participantes.find(
       (p) => normalize(p.nome) === normalize(quemSorteia)
     );
-
     if (!participante) {
-      return res
-        .status(400)
-        .json({ mensagem: "Nome não encontrado na lista!" });
+      return res.status(400).json({ mensagem: "Nome não encontrado na lista!" });
     }
 
     if (participante.jaSorteou === true) {
-      // Encontra quem foi sorteado por esta pessoa
       const pessoaSorteada = participantes.find(
-        (p) => p.sorteado === true && p.sortiadoPor === quemSorteia
+        (p) => p.sorteado === true && p.sorteadoPor === quemSorteia
       );
       return res.status(200).json({
         mensagem: "Você já fez seu sorteio!",
@@ -51,33 +76,27 @@ export default function handler(req, res) {
       });
     }
 
-    // Filtra participantes disponíveis
     const disponiveis = participantes.filter(
       (p) => p.sorteado !== true && normalize(p.nome) !== normalize(quemSorteia)
     );
-
-    writeFileSync(dataPath, JSON.stringify(disponiveis, null, 2), "utf8");
     if (disponiveis.length === 0) {
-      return res
-        .status(200)
-        .json({ mensagem: "Não há mais ninguém disponível!" });
+      return res.status(200).json({ mensagem: "Não há mais ninguém disponível!" });
     }
 
-    // Realiza o sorteio
-    const sorteado =
-      disponiveis[Math.floor(Math.random() * disponiveis.length)];
+    const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
 
-    // Atualiza os status em memória
     participante.jaSorteou = true;
+    participante.sorteou = sorteado.nome;
     sorteado.sorteado = true;
-    sorteado.sortiadoPor = quemSorteia;
+    sorteado.sorteadoPor = quemSorteia;
 
-    // Retorna o nome sorteado
+    writeFileSync(dataPath, JSON.stringify({ participantes }, null, 2), "utf8");
+
     return res.status(200).json({ nome: sorteado.nome });
   } catch (error) {
     console.error("Erro no sorteio:", error);
-    return res.status(500).json({
-      mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente.",
-    });
+    return res
+      .status(500)
+      .json({ mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente." });
   }
 }
