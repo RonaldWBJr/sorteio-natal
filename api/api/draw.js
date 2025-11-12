@@ -56,6 +56,7 @@ export default function handler(req, res) {
       (p) => p.sorteado !== true && normalize(p.nome) !== normalize(quemSorteia)
     );
 
+    writeFileSync(dataPath, JSON.stringify(disponiveis, null, 2), "utf8");
     if (disponiveis.length === 0) {
       return res
         .status(200)
