@@ -1,10 +1,9 @@
-// api/api/draw.js
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
-// caminhos de dados
+// caminhos de dados (usando nome SINGULAR: sorteio.json)
 const BUNDLE_DATA_PATH = join(process.cwd(), "api", "data", "sorteio.json"); // leitura do bundle
 const TMP_DATA_PATH = "/tmp/sorteio.json"; // escrita em Vercel (filesystem efêmero)
 
@@ -23,14 +22,17 @@ function isDevAuthorized(req) {
 }
 
 function loadParticipants() {
-  // tenta ler do /tmp (se já salvou nesta execução)
+  // tenta ler do /tmp (se já salvou antes na execução)
   try {
     const json = JSON.parse(readFileSync(TMP_DATA_PATH, "utf8"));
     return json.participantes || [];
-  } catch (_) {}
+  } catch (_) {
+    // segue para ler do bundle
+  }
 
-  // senão, lê do arquivo empacotado
-  const json = JSON.parse(readFileSync(BUNDLE_DATA_PATH, "utf8"));
+  // lê do arquivo do bundle (singular)
+  const raw = readFileSync(BUNDLE_DATA_PATH, "utf8");
+  const json = JSON.parse(raw);
   return json.participantes || [];
 }
 
@@ -52,6 +54,12 @@ function saveParticipants(participantes) {
 }
 
 export default function handler(req, res) {
+  // CORS básico (útil se você abrir o front de outro domínio)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Admin-Key");
+  if (req.method === "OPTIONS") return res.status(204).end();
+
   try {
     if (!participantes) {
       participantes = loadParticipants();
@@ -78,13 +86,13 @@ export default function handler(req, res) {
     }
 
     // ===== SORTEIO NORMAL =====
-    const quemSorteia = (req.query.quem || "").trim();
-    if (!quemSorteia) {
-      return res.status(400).json({ mensagem: "Nome é obrigatório." });
+    const quemSorteiaRaw = (req.query.quem || "").trim();
+    if (!quemSorteiaRaw) {
+      return res.status(400).json({ mensagem: "Nome é obrigatório (parametro ?quem=)." });
     }
 
     const participante = participantes.find(
-      (p) => normalize(p.nome) === normalize(quemSorteia)
+      (p) => normalize(p.nome) === normalize(quemSorteiaRaw)
     );
     if (!participante) {
       return res.status(400).json({ mensagem: "Nome não encontrado na lista!" });
@@ -92,7 +100,7 @@ export default function handler(req, res) {
 
     if (participante.jaSorteou === true) {
       const pessoaSorteada = participantes.find(
-        (p) => p.sorteado === true && p.sorteadoPor === quemSorteia
+        (p) => p.sorteado === true && p.sorteadoPor === participante.nome
       );
       return res.status(200).json({
         mensagem: "Você já fez seu sorteio!",
@@ -101,7 +109,7 @@ export default function handler(req, res) {
     }
 
     const disponiveis = participantes.filter(
-      (p) => p.sorteado !== true && normalize(p.nome) !== normalize(quemSorteia)
+      (p) => p.sorteado !== true && normalize(p.nome) !== normalize(participante.nome)
     );
     if (disponiveis.length === 0) {
       return res.status(200).json({ mensagem: "Não há mais ninguém disponível!" });
@@ -112,7 +120,7 @@ export default function handler(req, res) {
     participante.jaSorteou = true;
     participante.sorteou = sorteado.nome;
     sorteado.sorteado = true;
-    sorteado.sorteadoPor = quemSorteia;
+    sorteado.sorteadoPor = participante.nome;
 
     // persiste (em /tmp na Vercel)
     saveParticipants(participantes);
@@ -120,8 +128,9 @@ export default function handler(req, res) {
     return res.status(200).json({ nome: sorteado.nome });
   } catch (error) {
     console.error("Erro no sorteio:", error);
+    // devolve erro mais explícito no payload
     return res
       .status(500)
-      .json({ mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente." });
+      .json({ mensagem: "Erro ao realizar o sorteio", detalhe: String(error?.message || error) });
   }
 }

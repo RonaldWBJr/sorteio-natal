@@ -1,261 +1,52 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sorteio de Natal 🎅</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: "Poppins", sans-serif;
-        background: linear-gradient(135deg, #d32f2f, #ff6659);
-        color: #333;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow-x: hidden;
-        overflow-y: auto;
-        padding: 1rem;
-        box-sizing: border-box;
-      }
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sorteio de Natal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; max-width: 520px; margin: auto; }
+    input, button { padding: 12px; font-size: 16px; }
+    #msg { margin-top: 16px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>🎄 Sorteio de Natal</h1>
+  <label>Seu nome:</label><br/>
+  <input id="nome" placeholder="Digite exatamente como está na lista" />
+  <button id="btn">Sortear</button>
+  <div id="msg"></div>
 
-      .container {
-        background: #fff;
-        padding: clamp(1rem, 5vw, 2rem);
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        max-width: 400px;
-        width: 100%;
-        position: relative;
-        display: none;
-        margin: 1rem;
-        box-sizing: border-box;
-      }
+  <script>
+    const btn = document.getElementById('btn');
+    const msg = document.getElementById('msg');
 
-      h1 {
-        color: #b71c1c;
-        margin-bottom: 1rem;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        word-wrap: break-word;
-      }
+    btn.addEventListener('click', async () => {
+      msg.textContent = "Sorteando...";
+      const nome = document.getElementById('nome').value.trim();
+      if (!nome) { msg.textContent = "Informe seu nome."; return; }
 
-      button {
-        background-color: #d32f2f;
-        color: #fff;
-        border: none;
-        padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 5vw, 2rem);
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: clamp(1rem, 3vw, 1.1rem);
-        transition: 0.3s;
-        width: fit-content;
-        margin: 0 auto;
-      }
-      button:hover {
-        background-color: #b71c1c;
-        transform: scale(1.05);
-      }
-      @media (hover: none) {
-        button:hover {
-          transform: none;
+      try {
+        const r = await fetch(`/api/draw?quem=${encodeURIComponent(nome)}`);
+        const data = await r.json();
+
+        if (!r.ok) {
+          msg.textContent = `Erro ${r.status}: ${data?.mensagem || 'Falha no sorteio'}`;
+          if (data?.detalhe) msg.textContent += `\nDetalhe: ${data.detalhe}`;
+          return;
         }
-      }
 
-      .resultado {
-        margin-top: 1.5rem;
-        padding: 1rem;
-        border-radius: 10px;
-        background: #fff8e1;
-        color: #b71c1c;
-        font-weight: bold;
-        font-size: clamp(1.1rem, 3vw, 1.3rem);
-        visibility: hidden;
-        white-space: pre-line;
-        word-wrap: break-word;
-      }
-      .resultado.show {
-        visibility: visible;
-      }
-
-      .start-screen {
-        background: rgba(0, 0, 0, 0.4);
-        padding: clamp(1rem, 5vw, 2rem);
-        border-radius: 20px;
-        text-align: center;
-        color: white;
-        font-size: clamp(1.1rem, 3vw, 1.4rem);
-        margin: 1rem;
-        max-width: 90%;
-      }
-
-      input {
-        font-size: clamp(0.9rem, 2.5vw, 1rem);
-        max-width: 100%;
-        box-sizing: border-box;
-      }
-
-      .snowflake {
-        position: fixed;
-        top: -10px;
-        color: #fff;
-        font-size: 1em;
-        user-select: none;
-        pointer-events: none;
-        animation: fall linear infinite;
-      }
-      @keyframes fall {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 1;
+        if (data.nome) {
+          msg.textContent = `Você tirou: ${data.nome} 🎁`;
+        } else if (data.mensagem) {
+          msg.textContent = data.mensagem + (data.sorteado ? `\nVocê já tirou: ${data.sorteado} 🎁` : "");
+        } else {
+          msg.textContent = "Resposta inesperada do servidor.";
         }
-        100% {
-          transform: translateY(100vh) rotate(360deg);
-          opacity: 0;
-        }
+      } catch (e) {
+        msg.textContent = "Erro de rede. Tente novamente.\n" + String(e);
       }
-    </style>
-  </head>
-
-  <body>
-    <!-- TELA DE INÍCIO -->
-    <div class="start-screen" id="startScreen">
-      🎄 Bem-vindo ao Sorteio de Natal 🎁 <br /><br />
-      <button id="btnStart">Entrar</button>
-    </div>
-
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div class="container" id="app">
-      <h1>🎅 Sorteio de Natal 🎁</h1>
-      <input
-        id="nomePessoa"
-        placeholder="Seu nome"
-        style="
-          margin-bottom: 1rem;
-          padding: 0.5rem;
-          width: 100%;
-          border-radius: 8px;
-        "
-      />
-      <button id="btnSortear">Sortear</button>
-      <div id="resultado" class="resultado"></div>
-    </div>
-
-    <!-- Áudios -->
-    <audio id="musicaAmbiente" src="/sino.mp3" loop></audio>
-    <audio id="somNotificacao" src="/notification.mp3"></audio>
-
-    <script>
-      const API = "/api";
-      const STORAGE_KEY = "sorteio-natal-2023";
-
-      const startScreen = document.getElementById("startScreen");
-      const app = document.getElementById("app");
-      const musica = document.getElementById("musicaAmbiente");
-      const notificacao = document.getElementById("somNotificacao");
-
-      // Funções para gerenciar o localStorage
-      function getSorteioSalvo(nome) {
-        const sorteios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-        return sorteios[normalize(nome)];
-      }
-
-      function salvarSorteio(quemSorteou, quemFoiSorteado) {
-        const sorteios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-        sorteios[normalize(quemSorteou)] = quemFoiSorteado;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sorteios));
-      }
-
-      // Função para normalizar nomes (igual a do backend)
-      function normalize(str) {
-        return str
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-      }
-
-      // Verifica sorteio ao digitar nome
-      document.getElementById("nomePessoa").addEventListener("input", (e) => {
-        const nome = e.target.value.trim();
-        if (nome) {
-          const sorteioSalvo = getSorteioSalvo(nome);
-          if (sorteioSalvo) {
-            const resultado = document.getElementById("resultado");
-            resultado.textContent = `Você já fez seu sorteio!\nVocê sorteou: ${sorteioSalvo}`;
-            resultado.classList.add("show");
-            document.getElementById("nomePessoa").style.display = "none";
-            document.getElementById("btnSortear").style.display = "none";
-            resultado.style.fontSize = "1.6rem";
-          }
-        }
-      });
-
-      // ENTRAR → INICIA MÚSICA
-      document.getElementById("btnStart").addEventListener("click", () => {
-        musica.volume = 1;
-        musica.play().catch(() => {});
-        startScreen.style.display = "none";
-        app.style.display = "block";
-      });
-
-      // SORTEIO
-      document
-        .getElementById("btnSortear")
-        .addEventListener("click", async () => {
-          const nomePessoa = document.getElementById("nomePessoa").value.trim();
-          if (!nomePessoa) {
-            alert("Digite seu nome antes de sortear!");
-            return;
-          }
-
-          // Verifica se já tem sorteio salvo
-          const sorteioSalvo = getSorteioSalvo(nomePessoa);
-          if (sorteioSalvo) {
-            const resultado = document.getElementById("resultado");
-            resultado.textContent = `Você já fez seu sorteio!\nVocê sorteou: ${sorteioSalvo}`;
-            resultado.classList.add("show");
-            document.getElementById("nomePessoa").style.display = "none";
-            document.getElementById("btnSortear").style.display = "none";
-            resultado.style.fontSize = "1.6rem";
-            return;
-          }
-
-          // Faz o sorteio
-          const res = await fetch(
-            `${API}/draw?quem=${encodeURIComponent(nomePessoa)}`
-          );
-          const data = await res.json();
-
-          const resultado = document.getElementById("resultado");
-          if (data.nome) {
-            // Salva o resultado no localStorage
-            salvarSorteio(nomePessoa, data.nome);
-            resultado.textContent = data.nome;
-            document.getElementById("nomePessoa").style.display = "none";
-            document.getElementById("btnSortear").style.display = "none";
-            resultado.style.fontSize = "1.6rem";
-          } else {
-            resultado.textContent = data.mensagem;
-          }
-          resultado.classList.add("show");
-
-          notificacao.currentTime = 0;
-          notificacao.play().catch(() => {});
-        });
-
-      // Neve
-      function criarNeve() {
-        const floco = document.createElement("div");
-        floco.textContent = "❄";
-        floco.classList.add("snowflake");
-        floco.style.left = Math.random() * 100 + "vw";
-        floco.style.animationDuration = Math.random() * 3 + 2 + "s";
-        floco.style.fontSize = Math.random() * 10 + 10 + "px";
-        document.body.appendChild(floco);
-        setTimeout(() => floco.remove(), 5000);
-      }
-      setInterval(criarNeve, 200);
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
