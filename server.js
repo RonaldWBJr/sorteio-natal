@@ -1,69 +1,49 @@
+// server.js
 import express from "express";
-import { LowSync } from "lowdb";
-import { JSONFileSync } from "lowdb/node";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import fs from 'fs';
+import { LowSync } from "lowdb";
+import { JSONFileSync } from "lowdb/node";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Determina o caminho do db.json baseado no ambiente
-const dbPath = process.env.VERCEL ? '/tmp/db.json' : 'db.json';
+const normalize = (s = "") =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-// Se estiver no Vercel e o arquivo não existir em /tmp, inicializa
-if (process.env.VERCEL && !fs.existsSync(dbPath)) {
-  const initialData = { participantes: [] };
-  fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
+// Caminhos
+const DB_PATH = "db.json";
+const SEED_PATH = join(process.cwd(), "api", "data", "sorteios.json");
+
+// Inicializa lowdb
+if (!existsSync(DB_PATH)) {
+  writeFileSync(DB_PATH, JSON.stringify({ participantes: [] }, null, 2));
 }
-
-const adapter = new JSONFileSync(dbPath);
+const adapter = new JSONFileSync(DB_PATH);
 const db = new LowSync(adapter, { participantes: [] });
 db.read();
 
-function normalizar(str) {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
+// Semente a partir do arquivo do bundle, se o db estiver vazio
 if (!db.data.participantes || db.data.participantes.length === 0) {
-  db.data.participantes = [
-    { nome: "Lucas", sorteado: false, jaSorteou: false },
-    { nome: "Gustavo", sorteado: false, jaSorteou: false },
-    { nome: "Daniel Domingos", sorteado: false, jaSorteou: false },
-    { nome: "Priscila", sorteado: false, jaSorteou: false },
-    { nome: "Patricia", sorteado: false, jaSorteou: false },
-    { nome: "Daniel Mello", sorteado: false, jaSorteou: false },
-    { nome: "Danielle", sorteado: false, jaSorteou: false },
-    { nome: "Gabrielle", sorteado: false, jaSorteou: false },
-    { nome: "Raquel", sorteado: false, jaSorteou: false },
-    { nome: "Ronald", sorteado: false, jaSorteou: false },
-    { nome: "Beatriz", sorteado: false, jaSorteou: false },
-    { nome: "Guilherme", sorteado: false, jaSorteou: false },
-    { nome: "Alice", sorteado: false, jaSorteou: false },
-    { nome: "Muriel", sorteado: false, jaSorteou: false },
-    { nome: "Guigu", sorteado: false, jaSorteou: false },
-    { nome: "Arleide", sorteado: false, jaSorteou: false },
-    { nome: "Isaias", sorteado: false, jaSorteou: false },
-    { nome: "Vó Branca", sorteado: false, jaSorteou: false },
-  ];
+  const seed = JSON.parse(readFileSync(SEED_PATH, "utf8"));
+  db.data.participantes = seed.participantes?.map((p) => ({ ...p })) ?? [];
   db.write();
 }
 
 app.get("/draw", (req, res) => {
   db.read();
 
-  const quemSorteia = normalizar((req.query.quem || "").trim());
-
-  if (!quemSorteia) {
+  const quemRaw = (req.query.quem || "").trim();
+  if (!quemRaw) {
     return res.status(400).json({ mensagem: "Nome é obrigatório." });
   }
 
-  // agora aceita parte do nome
+  const alvoNorm = normalize(quemRaw);
   const participante = db.data.participantes.find((p) =>
-    normalizar(p.nome).includes(quemSorteia)
+    normalize(p.nome).includes(alvoNorm)
   );
 
   if (!participante) {
@@ -71,31 +51,45 @@ app.get("/draw", (req, res) => {
   }
 
   if (participante.jaSorteou) {
-    return res.json({ mensagem: "Você já sorteou! ❌" });
+    const pessoaSorteada = db.data.participantes.find(
+      (p) => p.sorteado === true && p.sorteadoPor === participante.nome
+    );
+    return res.json({
+      mensagem: "Você já sorteou! ❌",
+      sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined,
+    });
   }
 
-  const naoSorteados = db.data.participantes.filter(
-    (p) => !p.sorteado && normalizar(p.nome) !== normalizar(participante.nome)
+  const disponiveis = db.data.participantes.filter(
+    (p) => !p.sorteado && normalize(p.nome) !== normalize(participante.nome)
   );
 
-  if (naoSorteados.length === 0) {
+  if (disponiveis.length === 0) {
     return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
   }
 
-  const sorteado = naoSorteados[Math.floor(Math.random() * naoSorteados.length)];
+  if (
+    disponiveis.length === 1 &&
+    normalize(disponiveis[0].nome) === normalize(participante.nome)
+  ) {
+    return res.json({
+      mensagem:
+        "Não há opção válida no momento (só restou você). Tente novamente após outros sorteios.",
+    });
+  }
+
+  const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
 
   participante.jaSorteou = true;
+  participante.sorteou = sorteado.nome;
   sorteado.sorteado = true;
+  sorteado.sorteadoPor = participante.nome;
 
   db.write();
 
   res.json({ nome: sorteado.nome });
 });
 
-// Exporta o handler para uso no Vercel
-export default app;
-
-// Inicia o servidor apenas em ambiente local
-if (!process.env.VERCEL) {
-  app.listen(3000, () => console.log("✅ Servidor no ar na porta 3000"));
-}
+app.listen(3000, () => {
+  console.log("✅ Server local rodando em http://localhost:3000");
+});

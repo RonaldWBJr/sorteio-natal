@@ -1,30 +1,15 @@
 {
   "name": "sorteio-natal",
   "version": "1.0.0",
-  "description": "Aplicação de sorteio de Natal usando Express e LowDB",
-  "main": "server.js",
+  "description": "Aplicação de sorteio de Natal (Vercel Function + servidor local opcional)",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/RonaldWBJr/sorteio-natal.git"
-  },
-  "keywords": [],
-  "author": "RonaldWBJr",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/RonaldWBJr/sorteio-natal/issues"
-  },
-  "homepage": "https://github.com/RonaldWBJr/sorteio-natal#readme",
   "dependencies": {
-    "@vercel/kv": "^3.0.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "lowdb": "^7.0.1",
-    "mongodb": "^7.0.0",
-    "redis": "^5.9.0"
+    "lowdb": "^7.0.1"
   }
 }
