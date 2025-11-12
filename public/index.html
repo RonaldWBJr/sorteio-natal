@@ -29,7 +29,6 @@
         max-width: 400px;
         width: 100%;
         position: relative;
-        display: none;
         margin: 1rem;
         box-sizing: border-box;
       }
@@ -39,6 +38,21 @@
         margin-bottom: 1rem;
         font-size: clamp(1.5rem, 4vw, 2rem);
         word-wrap: break-word;
+      }
+
+      input {
+        width: 100%;
+        padding: clamp(0.8rem, 3vw, 1rem);
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        outline: none;
+        transition: 0.3s;
+      }
+      input:focus {
+        border-color: #d32f2f;
+        box-shadow: 0 0 6px rgba(211, 47, 47, 0.3);
       }
 
       button {
@@ -53,10 +67,12 @@
         width: fit-content;
         margin: 0 auto;
       }
+
       button:hover {
         background-color: #b71c1c;
         transform: scale(1.05);
       }
+
       @media (hover: none) {
         button:hover {
           transform: none;
@@ -71,29 +87,8 @@
         color: #b71c1c;
         font-weight: bold;
         font-size: clamp(1.1rem, 3vw, 1.3rem);
-        visibility: hidden;
         white-space: pre-line;
         word-wrap: break-word;
-      }
-      .resultado.show {
-        visibility: visible;
-      }
-
-      .start-screen {
-        background: rgba(0, 0, 0, 0.4);
-        padding: clamp(1rem, 5vw, 2rem);
-        border-radius: 20px;
-        text-align: center;
-        color: white;
-        font-size: clamp(1.1rem, 3vw, 1.4rem);
-        margin: 1rem;
-        max-width: 90%;
-      }
-
-      input {
-        font-size: clamp(0.9rem, 2.5vw, 1rem);
-        max-width: 100%;
-        box-sizing: border-box;
       }
 
       .snowflake {
@@ -105,6 +100,7 @@
         pointer-events: none;
         animation: fall linear infinite;
       }
+
       @keyframes fall {
         0% {
           transform: translateY(0) rotate(0deg);
@@ -118,55 +114,64 @@
     </style>
   </head>
 
-  <!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sorteio de Natal</title>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 24px; max-width: 520px; margin: auto; }
-    input, button { padding: 12px; font-size: 16px; }
-    #msg { margin-top: 16px; white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  <h1>🎄 Sorteio de Natal</h1>
-  <label>Seu nome:</label><br/>
-  <input id="nome" placeholder="Digite exatamente como está na lista" />
-  <button id="btn">Sortear</button>
-  <div id="msg"></div>
+  <body>
+    <div class="container">
+      <h1>🎄 Sorteio de Natal 🎄</h1>
+      <input id="nome" placeholder="Digite exatamente como está na lista" />
+      <button id="btn">Sortear 🎁</button>
+      <div class="resultado" id="msg"></div>
+    </div>
 
-  <script>
-    const btn = document.getElementById('btn');
-    const msg = document.getElementById('msg');
+    <script>
+      // neve caindo ❄️
+      for (let i = 0; i < 15; i++) {
+        const snow = document.createElement("div");
+        snow.className = "snowflake";
+        snow.textContent = "❄";
+        snow.style.left = Math.random() * 100 + "vw";
+        snow.style.animationDuration = 5 + Math.random() * 5 + "s";
+        snow.style.fontSize = 14 + Math.random() * 10 + "px";
+        document.body.appendChild(snow);
+      }
 
-    btn.addEventListener('click', async () => {
-      msg.textContent = "Sorteando...";
-      const nome = document.getElementById('nome').value.trim();
-      if (!nome) { msg.textContent = "Informe seu nome."; return; }
+      const btn = document.getElementById("btn");
+      const msg = document.getElementById("msg");
 
-      try {
-        const r = await fetch(`/api/draw?quem=${encodeURIComponent(nome)}`);
-        const data = await r.json();
-
-        if (!r.ok) {
-          msg.textContent = `Erro ${r.status}: ${data?.mensagem || 'Falha no sorteio'}`;
-          if (data?.detalhe) msg.textContent += `\nDetalhe: ${data.detalhe}`;
+      btn.addEventListener("click", async () => {
+        msg.textContent = "🔄 Sorteando...";
+        const nome = document.getElementById("nome").value.trim();
+        if (!nome) {
+          msg.textContent = "⚠️ Por favor, digite seu nome antes de sortear!";
           return;
         }
 
-        if (data.nome) {
-          msg.textContent = `Você tirou: ${data.nome} 🎁`;
-        } else if (data.mensagem) {
-          msg.textContent = data.mensagem + (data.sorteado ? `\nVocê já tirou: ${data.sorteado} 🎁` : "");
-        } else {
-          msg.textContent = "Resposta inesperada do servidor.";
+        try {
+          const r = await fetch(`/api/draw?quem=${encodeURIComponent(nome)}`);
+          const data = await r.json();
+
+          if (!r.ok) {
+            msg.textContent = `❌ Erro: ${
+              data?.mensagem || "Falha no sorteio"
+            }`;
+            if (data?.detalhe)
+              msg.textContent += `\n(${data.detalhe})`;
+            return;
+          }
+
+          if (data.nome) {
+            msg.textContent = `✅ Você tirou: ${data.nome} 🎁`;
+          } else if (data.mensagem) {
+            msg.textContent = data.mensagem;
+            if (data.sorteado)
+              msg.textContent += `\nVocê já tirou: ${data.sorteado} 🎁`;
+          } else {
+            msg.textContent = "⚠️ Resposta inesperada do servidor.";
+          }
+        } catch (e) {
+          msg.textContent =
+            "❌ Erro de rede. Tente novamente.\n" + String(e);
         }
-      } catch (e) {
-        msg.textContent = "Erro de rede. Tente novamente.\n" + String(e);
-      }
-    });
-  </script>
-</body>
+      });
+    </script>
+  </body>
 </html>

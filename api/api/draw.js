@@ -1,11 +1,33 @@
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
 
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
-// caminhos de dados (usando nome SINGULAR: sorteio.json)
-const BUNDLE_DATA_PATH = join(process.cwd(), "api", "data", "sorteio.json"); // leitura do bundle
-const TMP_DATA_PATH = "/tmp/sorteio.json"; // escrita em Vercel (filesystem efêmero)
+// Caminhos
+const BUNDLE_DATA_PATH = join(process.cwd(), "api", "data", "sorteio.json"); // leitura do bundle (read-only)
+const TMP_DATA_PATH = "/tmp/sorteio.json"; // escrita na Vercel
+
+// Lista padrão caso o JSON do bundle não exista
+const DEFAULT_PARTICIPANTS = [
+  { nome: "Lucas", sorteado: false, jaSorteou: false },
+  { nome: "Gustavo", sorteado: false, jaSorteou: false },
+  { nome: "Daniel Domingos", sorteado: false, jaSorteou: false },
+  { nome: "Priscila", sorteado: false, jaSorteou: false },
+  { nome: "Patricia", sorteado: false, jaSorteou: false },
+  { nome: "Daniel Mello", sorteado: false, jaSorteou: false },
+  { nome: "Danielle", sorteado: false, jaSorteou: false },
+  { nome: "Gabrielle", sorteado: false, jaSorteou: false },
+  { nome: "Raquel", sorteado: false, jaSorteou: false },
+  { nome: "Ronald", sorteado: false, jaSorteou: false },
+  { nome: "Beatriz", sorteado: false, jaSorteou: false },
+  { nome: "Guilherme", sorteado: false, jaSorteou: false },
+  { nome: "Alice", sorteado: false, jaSorteou: false },
+  { nome: "Muriel", sorteado: false, jaSorteou: false },
+  { nome: "Guigu", sorteado: false, jaSorteou: false },
+  { nome: "Arleide", sorteado: false, jaSorteou: false },
+  { nome: "Isaias", sorteado: false, jaSorteou: false },
+  { nome: "Vó Branca", sorteado: false, jaSorteou: false }
+];
 
 let participantes = null;
 
@@ -22,50 +44,51 @@ function isDevAuthorized(req) {
 }
 
 function loadParticipants() {
-  // tenta ler do /tmp (se já salvou antes na execução)
+  // 1) tenta ler do /tmp se já houver persistência desta execução
   try {
-    const json = JSON.parse(readFileSync(TMP_DATA_PATH, "utf8"));
-    return json.participantes || [];
-  } catch (_) {
-    // segue para ler do bundle
-  }
+    if (existsSync(TMP_DATA_PATH)) {
+      const json = JSON.parse(readFileSync(TMP_DATA_PATH, "utf8"));
+      return json.participantes || [];
+    }
+  } catch {}
 
-  // lê do arquivo do bundle (singular)
-  const raw = readFileSync(BUNDLE_DATA_PATH, "utf8");
-  const json = JSON.parse(raw);
-  return json.participantes || [];
+  // 2) tenta ler do arquivo do bundle (read-only)
+  try {
+    if (existsSync(BUNDLE_DATA_PATH)) {
+      const json = JSON.parse(readFileSync(BUNDLE_DATA_PATH, "utf8"));
+      return json.participantes || [];
+    }
+  } catch {}
+
+  // 3) fallback seguro: usa lista padrão em memória
+  return DEFAULT_PARTICIPANTS.map((p) => ({ ...p }));
 }
 
-function saveParticipants(participantes) {
-  // em Vercel, escreva em /tmp
+function saveParticipants(list) {
   try {
-    writeFileSync(TMP_DATA_PATH, JSON.stringify({ participantes }, null, 2), "utf8");
-    return true;
-  } catch (_) {}
+    // garante que /tmp existe
+    const dir = dirname(TMP_DATA_PATH);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
-  // fallback local (ambientes fora da Vercel)
-  try {
-    writeFileSync(BUNDLE_DATA_PATH, JSON.stringify({ participantes }, null, 2), "utf8");
+    writeFileSync(
+      TMP_DATA_PATH,
+      JSON.stringify({ participantes: list }, null, 2),
+      "utf8"
+    );
     return true;
   } catch (err) {
-    console.error("Falha ao salvar participantes:", err);
+    console.error("Falha ao salvar em /tmp:", err);
     return false;
   }
 }
 
 export default function handler(req, res) {
-  // CORS básico (útil se você abrir o front de outro domínio)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Admin-Key");
-  if (req.method === "OPTIONS") return res.status(204).end();
-
   try {
     if (!participantes) {
       participantes = loadParticipants();
     }
 
-    // ===== DEV-ONLY: listar pares =====
+    // ===== DEV-ONLY: listar pares e pendências =====
     if (req.method === "GET" && req.query.acao === "pares") {
       if (!isDevAuthorized(req)) {
         return res
@@ -88,29 +111,29 @@ export default function handler(req, res) {
     // ===== SORTEIO NORMAL =====
     const quemSorteiaRaw = (req.query.quem || "").trim();
     if (!quemSorteiaRaw) {
-      return res.status(400).json({ mensagem: "Nome é obrigatório (parametro ?quem=)." });
+      return res.status(400).json({ mensagem: "Nome é obrigatório." });
     }
 
-    const participante = participantes.find(
-      (p) => normalize(p.nome) === normalize(quemSorteiaRaw)
-    );
+    // aceita "contains" para facilitar (insensível a acentos/caixa)
+    const key = normalize(quemSorteiaRaw);
+    const participante = participantes.find((p) => normalize(p.nome).includes(key));
+
     if (!participante) {
       return res.status(400).json({ mensagem: "Nome não encontrado na lista!" });
     }
 
     if (participante.jaSorteou === true) {
-      const pessoaSorteada = participantes.find(
-        (p) => p.sorteado === true && p.sorteadoPor === participante.nome
-      );
+      const pessoaSorteada = participantes.find((p) => p.sorteado === true && p.sorteadoPor === participante.nome);
       return res.status(200).json({
         mensagem: "Você já fez seu sorteio!",
-        sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined,
+        sorteado: pessoaSorteada ? pessoaSorteada.nome : participante.sorteou
       });
     }
 
     const disponiveis = participantes.filter(
       (p) => p.sorteado !== true && normalize(p.nome) !== normalize(participante.nome)
     );
+
     if (disponiveis.length === 0) {
       return res.status(200).json({ mensagem: "Não há mais ninguém disponível!" });
     }
@@ -122,15 +145,15 @@ export default function handler(req, res) {
     sorteado.sorteado = true;
     sorteado.sorteadoPor = participante.nome;
 
-    // persiste (em /tmp na Vercel)
+    // Persiste somente em /tmp (Vercel)
     saveParticipants(participantes);
 
     return res.status(200).json({ nome: sorteado.nome });
   } catch (error) {
     console.error("Erro no sorteio:", error);
-    // devolve erro mais explícito no payload
-    return res
-      .status(500)
-      .json({ mensagem: "Erro ao realizar o sorteio", detalhe: String(error?.message || error) });
+    return res.status(500).json({
+      mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente.",
+      detalhe: String(error?.message || error)
+    });
   }
 }
