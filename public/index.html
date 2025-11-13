@@ -1,177 +1,151 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sorteio de Natal 🎅</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: "Poppins", sans-serif;
-        background: linear-gradient(135deg, #d32f2f, #ff6659);
-        color: #333;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow-x: hidden;
-        overflow-y: auto;
-        padding: 1rem;
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sorteio de Natal 🎅</title>
+  <style>
+    :root{
+      --bg1:#d32f2f;
+      --bg2:#ff6659;
+      --txt:#333;
+      --brand:#b71c1c;
+      --btn:#d32f2f;
+      --btn-hover:#b71c1c;
+      --card:#ffffff;
+      --result-bg:#fff8e1;
+    }
+    *{ box-sizing:border-box }
+    body{
+      margin:0;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--txt);
+      min-height:100vh;
+      background:linear-gradient(135deg, var(--bg1), var(--bg2));
+      display:flex; align-items:center; justify-content:center;
+      padding:24px;
+      overflow-x:hidden;
+    }
+    .shell{
+      width:min(960px, 100%);
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:24px;
+      align-items:center;
+    }
+    @media (min-width:900px){
+      .shell{ grid-template-columns: 360px 1fr; }
+    }
+    .title{
+      color:#8b1f1f;
+      text-shadow:0 1px 0 rgba(255,255,255,.4);
+      font-weight:900; line-height:.95; letter-spacing:.5px;
+      user-select:none;
+    }
+    .title .tree{ font-size:56px; display:block; margin-bottom:8px }
+    .title h1{ margin:0; font-size:clamp(42px, 8vw, 72px) }
+    .title h1 span{ color:var(--brand) }
 
-      .container {
-        background: #fff;
-        padding: clamp(1rem, 5vw, 2rem);
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        max-width: 400px;
-        width: 100%;
-        position: relative;
-        margin: 1rem;
-        box-sizing: border-box;
-      }
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      padding:clamp(16px, 4vw, 28px);
+      box-shadow:0 10px 25px rgba(0,0,0,.2);
+    }
+    label{ display:block; font-weight:600; margin-bottom:8px; color:#2d2d2d }
+    .row{ display:flex; gap:12px; align-items:center }
+    input{
+      flex:1 1 auto; min-width:0;
+      padding:14px 16px; font-size:18px;
+      border-radius:10px; border:1px solid rgba(0,0,0,.15);
+      outline:none; transition:border .2s, box-shadow .2s;
+    }
+    input:focus{ border-color:var(--btn); box-shadow:0 0 0 3px rgba(211,47,47,.15) }
+    button{
+      flex:0 0 auto; white-space:nowrap;
+      background:var(--btn); color:#fff; border:none;
+      padding:14px 22px; border-radius:12px; font-size:18px; font-weight:700;
+      cursor:pointer; transition:transform .15s, background .15s, box-shadow .15s;
+      box-shadow:0 6px 14px rgba(0,0,0,.18);
+    }
+    button:hover{ background:var(--btn-hover); transform:translateY(-1px) }
+    @media (hover:none){ button:hover{ transform:none } }
+    .result{
+      margin-top:16px; background:var(--result-bg); color:var(--brand);
+      font-weight:800; padding:14px 16px; border-radius:12px;
+      min-height:48px; white-space:pre-line;
+    }
 
-      h1 {
-        color: #b71c1c;
-        margin-bottom: 1rem;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        word-wrap: break-word;
-      }
-
-      input {
-        width: 100%;
-        padding: clamp(0.8rem, 3vw, 1rem);
-        font-size: clamp(0.9rem, 2.5vw, 1rem);
-        border: 2px solid #ccc;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-        outline: none;
-        transition: 0.3s;
-      }
-      input:focus {
-        border-color: #d32f2f;
-        box-shadow: 0 0 6px rgba(211, 47, 47, 0.3);
-      }
-
-      button {
-        background-color: #d32f2f;
-        color: #fff;
-        border: none;
-        padding: clamp(0.8rem, 3vw, 1rem) clamp(1.5rem, 5vw, 2rem);
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: clamp(1rem, 3vw, 1.1rem);
-        transition: 0.3s;
-        width: fit-content;
-        margin: 0 auto;
-      }
-
-      button:hover {
-        background-color: #b71c1c;
-        transform: scale(1.05);
-      }
-
-      @media (hover: none) {
-        button:hover {
-          transform: none;
-        }
-      }
-
-      .resultado {
-        margin-top: 1.5rem;
-        padding: 1rem;
-        border-radius: 10px;
-        background: #fff8e1;
-        color: #b71c1c;
-        font-weight: bold;
-        font-size: clamp(1.1rem, 3vw, 1.3rem);
-        white-space: pre-line;
-        word-wrap: break-word;
-      }
-
-      .snowflake {
-        position: fixed;
-        top: -10px;
-        color: #fff;
-        font-size: 1em;
-        user-select: none;
-        pointer-events: none;
-        animation: fall linear infinite;
-      }
-
-      @keyframes fall {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(100vh) rotate(360deg);
-          opacity: 0;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="container">
-      <h1>🎄 Sorteio de Natal 🎄</h1>
-      <input id="nome" placeholder="Digite exatamente como está na lista" />
-      <button id="btn">Sortear 🎁</button>
-      <div class="resultado" id="msg"></div>
+    .snowflake{
+      position:fixed; top:-10px; left:0; color:#fff; font-size:14px;
+      user-select:none; pointer-events:none; animation:fall linear infinite; opacity:.9;
+    }
+    @keyframes fall{ 0%{ transform:translateY(-10px) rotate(0) } 100%{ transform:translateY(110vh) rotate(360deg); opacity:0 } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="title">
+      <span class="tree">🎄</span>
+      <h1><span>Sorteio</span><br/>de<br/>Natal</h1>
     </div>
 
-    <script>
-      // neve caindo ❄️
-      for (let i = 0; i < 15; i++) {
-        const snow = document.createElement("div");
-        snow.className = "snowflake";
-        snow.textContent = "❄";
-        snow.style.left = Math.random() * 100 + "vw";
-        snow.style.animationDuration = 5 + Math.random() * 5 + "s";
-        snow.style.fontSize = 14 + Math.random() * 10 + "px";
-        document.body.appendChild(snow);
-      }
+    <div class="card">
+      <label for="nome">Seu nome:</label>
+      <div class="row">
+        <input id="nome" placeholder="Digite exatamente como está na lista"/>
+        <button id="btn">Sortear</button>
+      </div>
+      <div id="msg" class="result"></div>
+    </div>
+  </div>
 
-      const btn = document.getElementById("btn");
-      const msg = document.getElementById("msg");
+  <script>
+    // enfeite: flocos
+    for (let i = 0; i < 24; i++){
+      const s = document.createElement('div');
+      s.className = 'snowflake';
+      s.style.left = `${Math.random()*100}vw`;
+      s.style.animationDuration = `${6 + Math.random()*6}s`;
+      s.textContent = '❄';
+      document.body.appendChild(s);
+    }
 
-      btn.addEventListener("click", async () => {
-        msg.textContent = "🔄 Sorteando...";
-        const nome = document.getElementById("nome").value.trim();
-        if (!nome) {
-          msg.textContent = "⚠️ Por favor, digite seu nome antes de sortear!";
+    const btn = document.getElementById('btn');
+    const input = document.getElementById('nome');
+    const msg = document.getElementById('msg');
+
+    function setMsg(t){ msg.textContent = t || ""; }
+
+    async function sortear(){
+      const nome = input.value.trim();
+      if (!nome){ setMsg("Informe seu nome."); return; }
+      setMsg("Sorteando...");
+
+      try{
+        // funciona tanto local (server.js) quanto na Vercel (/api/draw)
+        const r = await fetch(`/api/draw?quem=${encodeURIComponent(nome)}`);
+        const data = await r.json();
+
+        if (!r.ok){
+          setMsg(`Erro ${r.status}: ${data?.mensagem || 'Falha no sorteio'}${data?.detalhe ? `\nDetalhe: ${data.detalhe}` : ''}`);
           return;
         }
 
-        try {
-          const r = await fetch(`/api/draw?quem=${encodeURIComponent(nome)}`);
-          const data = await r.json();
-
-          if (!r.ok) {
-            msg.textContent = `❌ Erro: ${
-              data?.mensagem || "Falha no sorteio"
-            }`;
-            if (data?.detalhe)
-              msg.textContent += `\n(${data.detalhe})`;
-            return;
-          }
-
-          if (data.nome) {
-            msg.textContent = `✅ Você tirou: ${data.nome} 🎁`;
-          } else if (data.mensagem) {
-            msg.textContent = data.mensagem;
-            if (data.sorteado)
-              msg.textContent += `\nVocê já tirou: ${data.sorteado} 🎁`;
-          } else {
-            msg.textContent = "⚠️ Resposta inesperada do servidor.";
-          }
-        } catch (e) {
-          msg.textContent =
-            "❌ Erro de rede. Tente novamente.\n" + String(e);
+        if (data.nome){
+          setMsg(`Você tirou: ${data.nome} 🎁`);
+        } else if (data.mensagem){
+          setMsg(data.mensagem + (data.sorteado ? `\nVocê já tirou: ${data.sorteado} 🎁` : ""));
+        } else {
+          setMsg("Resposta inesperada do servidor.");
         }
-      });
-    </script>
-  </body>
+      }catch(e){
+        setMsg(`Erro de rede. Tente novamente.\n${String(e)}`);
+      }
+    }
+
+    btn.addEventListener('click', sortear);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sortear(); });
+  </script>
+</body>
 </html>

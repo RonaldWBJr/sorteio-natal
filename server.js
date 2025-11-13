@@ -1,95 +1,122 @@
-// server.js
+// server.js — servidor local com Express (ESM)
+// roda com: npm start  (porta 3000)
+
 import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import { LowSync } from "lowdb";
-import { JSONFileSync } from "lowdb/node";
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { join } from "path";
+import fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-const normalize = (s = "") =>
+// --- persistência local em arquivo (db.json) ---
+const DB_PATH = path.join(__dirname, "db.json");
+
+// seed padrão (edite os nomes se quiser)
+const DEFAULT_PARTICIPANTS = [
+  { nome: "Lucas", sorteado: false, jaSorteou: false },
+  { nome: "Gustavo", sorteado: false, jaSorteou: false },
+  { nome: "Daniel Domingos", sorteado: false, jaSorteou: false },
+  { nome: "Priscila", sorteado: false, jaSorteou: false },
+  { nome: "Patricia", sorteado: false, jaSorteou: false },
+  { nome: "Daniel Mello", sorteado: false, jaSorteou: false },
+  { nome: "Danielle", sorteado: false, jaSorteou: false },
+  { nome: "Gabrielle", sorteado: false, jaSorteou: false },
+  { nome: "Raquel", sorteado: false, jaSorteou: false },
+  { nome: "Ronald", sorteado: false, jaSorteou: false },
+  { nome: "Beatriz", sorteado: false, jaSorteou: false },
+  { nome: "Guilherme", sorteado: false, jaSorteou: false },
+  { nome: "Alice", sorteado: false, jaSorteou: false },
+  { nome: "Muriel", sorteado: false, jaSorteou: false },
+  { nome: "Guigu", sorteado: false, jaSorteou: false },
+  { nome: "Arleide", sorteado: false, jaSorteou: false },
+  { nome: "Isaias", sorteado: false, jaSorteou: false },
+  { nome: "Vó Branca", sorteado: false, jaSorteou: false }
+];
+
+function loadDB() {
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      const json = JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
+      if (Array.isArray(json?.participantes)) return json.participantes;
+    }
+  } catch (_) {}
+  return DEFAULT_PARTICIPANTS.map((p) => ({ ...p }));
+}
+
+function saveDB(participantes) {
+  try {
+    fs.writeFileSync(
+      DB_PATH,
+      JSON.stringify({ participantes }, null, 2),
+      "utf8"
+    );
+  } catch (e) {
+    console.error("Falha ao salvar db.json:", e);
+  }
+}
+
+let participantes = loadDB();
+
+const norm = (s = "") =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-// Caminhos
-const DB_PATH = "db.json";
-const SEED_PATH = join(process.cwd(), "api", "data", "sorteios.json");
+// --- API local em /api/draw (igual à versão serverless) ---
+app.get("/api/draw", (req, res) => {
+  try {
+    const quemRaw = String(req.query.quem || "").trim();
+    if (!quemRaw) {
+      return res.status(400).json({ mensagem: "Nome é obrigatório." });
+    }
 
-// Inicializa lowdb
-if (!existsSync(DB_PATH)) {
-  writeFileSync(DB_PATH, JSON.stringify({ participantes: [] }, null, 2));
-}
-const adapter = new JSONFileSync(DB_PATH);
-const db = new LowSync(adapter, { participantes: [] });
-db.read();
+    const chave = norm(quemRaw);
+    const participante = participantes.find((p) => norm(p.nome).includes(chave));
+    if (!participante) {
+      return res.status(400).json({ mensagem: "Nome não encontrado na lista!" });
+    }
 
-// Semente a partir do arquivo do bundle, se o db estiver vazio
-if (!db.data.participantes || db.data.participantes.length === 0) {
-  const seed = JSON.parse(readFileSync(SEED_PATH, "utf8"));
-  db.data.participantes = seed.participantes?.map((p) => ({ ...p })) ?? [];
-  db.write();
-}
+    if (participante.jaSorteou) {
+      const pessoaSorteada =
+        participantes.find((p) => p.sorteado && p.sorteadoPor === participante.nome) ||
+        participantes.find((p) => p.nome === participante.sorteou);
+      return res.status(200).json({
+        mensagem: "Você já fez seu sorteio!",
+        sorteado: pessoaSorteada?.nome || participante.sorteou
+      });
+    }
 
-app.get("/draw", (req, res) => {
-  db.read();
-
-  const quemRaw = (req.query.quem || "").trim();
-  if (!quemRaw) {
-    return res.status(400).json({ mensagem: "Nome é obrigatório." });
-  }
-
-  const alvoNorm = normalize(quemRaw);
-  const participante = db.data.participantes.find((p) =>
-    normalize(p.nome).includes(alvoNorm)
-  );
-
-  if (!participante) {
-    return res.status(400).json({ mensagem: "Nome não encontrado na lista." });
-  }
-
-  if (participante.jaSorteou) {
-    const pessoaSorteada = db.data.participantes.find(
-      (p) => p.sorteado === true && p.sorteadoPor === participante.nome
+    const disponiveis = participantes.filter(
+      (p) => !p.sorteado && norm(p.nome) !== norm(participante.nome)
     );
-    return res.json({
-      mensagem: "Você já sorteou! ❌",
-      sorteado: pessoaSorteada ? pessoaSorteada.nome : undefined,
+    if (disponiveis.length === 0) {
+      return res.status(200).json({ mensagem: "Não há mais ninguém disponível!" });
+    }
+
+    const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+
+    participante.jaSorteou = true;
+    participante.sorteou = sorteado.nome;
+
+    sorteado.sorteado = true;
+    sorteado.sorteadoPor = participante.nome;
+
+    saveDB(participantes);
+    return res.status(200).json({ nome: sorteado.nome });
+  } catch (error) {
+    console.error("Erro no sorteio:", error);
+    return res.status(500).json({
+      mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente.",
+      detalhe: String(error?.message || error)
     });
   }
-
-  const disponiveis = db.data.participantes.filter(
-    (p) => !p.sorteado && normalize(p.nome) !== normalize(participante.nome)
-  );
-
-  if (disponiveis.length === 0) {
-    return res.json({ mensagem: "Não há mais nomes para sortear 🎅" });
-  }
-
-  if (
-    disponiveis.length === 1 &&
-    normalize(disponiveis[0].nome) === normalize(participante.nome)
-  ) {
-    return res.json({
-      mensagem:
-        "Não há opção válida no momento (só restou você). Tente novamente após outros sorteios.",
-    });
-  }
-
-  const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
-
-  participante.jaSorteou = true;
-  participante.sorteou = sorteado.nome;
-  sorteado.sorteado = true;
-  sorteado.sorteadoPor = participante.nome;
-
-  db.write();
-
-  res.json({ nome: sorteado.nome });
 });
 
-app.listen(3000, () => {
-  console.log("✅ Server local rodando em http://localhost:3000");
+// --- static da pasta public ---
+app.use(express.static(path.join(__dirname, "public")));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Servidor local rodando em http://localhost:${PORT}`);
 });
