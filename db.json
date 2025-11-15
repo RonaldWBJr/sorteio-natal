@@ -2,129 +2,129 @@
   "participantes": [
     {
       "nome": "Lucas",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Beatriz",
-      "sorteadoPor": "Beatriz"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Gustavo",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Guilherme",
-      "sorteadoPor": "Muriel"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Daniel Domingos",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Daniel Mello",
-      "sorteadoPor": "Raquel"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Priscila",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Alice",
-      "sorteadoPor": "Guilherme"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Patricia",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Raquel",
-      "sorteadoPor": "Isaias"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Daniel Mello",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Ronald",
-      "sorteadoPor": "Daniel Domingos"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Danielle",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Gabrielle",
-      "sorteadoPor": "Gabrielle"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Gabrielle",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Danielle",
-      "sorteadoPor": "Danielle"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Raquel",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Daniel Domingos",
-      "sorteadoPor": "Patricia"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Ronald",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Vó Branca",
-      "sorteadoPor": "Daniel Mello"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Beatriz",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Lucas",
-      "sorteadoPor": "Lucas"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Guilherme",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Priscila",
-      "sorteadoPor": "Gustavo"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Alice",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Arleide",
-      "sorteadoPor": "Priscila"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Muriel",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Gustavo",
-      "sorteadoPor": "Vó Branca"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Guigu",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Isaias",
-      "sorteadoPor": "Arleide"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Arleide",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Guigu",
-      "sorteadoPor": "Alice"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Isaias",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Patricia",
-      "sorteadoPor": "Guigu"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     },
     {
       "nome": "Vó Branca",
-      "sorteado": true,
-      "jaSorteou": true,
-      "sorteou": "Muriel",
-      "sorteadoPor": "Ronald"
+      "sorteado": false,
+      "jaSorteou": false,
+      "sorteou": "",
+      "sorteadoPor": ""
     }
   ]
 }
