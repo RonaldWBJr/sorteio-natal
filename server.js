@@ -1,6 +1,21 @@
+// server.js — servidor local com Express (ESM)
+// roda com: npm start  (porta 3000)
+
+import express from "express";
+import fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const app = express();
+
+// ----------------- CONFIG / BANCO SIMPLES -----------------
+
 const DB_PATH = path.join(__dirname, "db.json");
 
-// seed padrão (edite os nomes se quiser)
+// Lista padrão (pode editar os nomes)
 const DEFAULT_PARTICIPANTS = [
   { nome: "Lucas", sorteado: false, jaSorteou: false },
   { nome: "Gustavo", sorteado: false, jaSorteou: false },
@@ -22,15 +37,25 @@ const DEFAULT_PARTICIPANTS = [
   { nome: "Vó Branca", sorteado: false, jaSorteou: false }
 ];
 
+function normalizaRegistro(p) {
+  // garante que todos tenham as mesmas chaves
+  return {
+    nome: String(p.nome),
+    sorteado: !!p.sorteado,
+    jaSorteou: !!p.jaSorteou,
+    sorteou: p.sorteou || null,
+    sorteadoPor: p.sorteadoPor || null
+  };
+}
+
 function loadDB() {
   try {
     if (fs.existsSync(DB_PATH)) {
       const json = JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
 
-      // Só aceita se for array e tiver pelo menos 1 participante
       if (Array.isArray(json?.participantes) && json.participantes.length > 0) {
         console.log("📂 Carregando participantes do db.json");
-        return json.participantes;
+        return json.participantes.map(normalizaRegistro);
       }
 
       console.warn(
@@ -41,9 +66,8 @@ function loadDB() {
     console.error("❌ Erro ao carregar db.json, usando padrão:", e);
   }
 
-  // Se deu erro ou estava vazio, usa a lista padrão
   console.log("✨ Usando DEFAULT_PARTICIPANTS");
-  return DEFAULT_PARTICIPANTS.map((p) => ({ ...p }));
+  return DEFAULT_PARTICIPANTS.map((p) => normalizaRegistro(p));
 }
 
 function saveDB(participantes) {
@@ -64,4 +88,101 @@ function saveDB(participantes) {
   }
 }
 
+// carrega estado atual
 let participantes = loadDB();
+
+const norm = (s = "") =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+// ----------------- FRONT ESTÁTICO -----------------
+
+app.use(express.static(path.join(__dirname, "public")));
+
+// ----------------- ROTA DO SORTEIO -----------------
+
+app.get("/api/draw", (req, res) => {
+  try {
+    const quemRaw = String(req.query.quem || "").trim();
+    if (!quemRaw) {
+      return res.status(400).json({ mensagem: "Nome é obrigatório." });
+    }
+
+    const chave = norm(quemRaw);
+
+    // precisa bater exatamente (ignora só acento e caixa)
+    const participante = participantes.find(
+      (p) => norm(p.nome) === chave
+    );
+
+    if (!participante) {
+      return res
+        .status(400)
+        .json({ mensagem: "Nome não encontrado na lista!" });
+    }
+
+    // 🔒 se já sorteou alguma vez, não deixa de novo
+    if (participante.jaSorteou || participante.sorteou) {
+      const pessoaSorteada =
+        participantes.find(
+          (p) => p.sorteado && p.sorteadoPor === participante.nome
+        ) ||
+        participantes.find((p) => p.nome === participante.sorteou);
+
+      return res.status(200).json({
+        mensagem: "Você já fez seu sorteio!",
+        sorteado: pessoaSorteada?.nome || participante.sorteou
+      });
+    }
+
+    // monta a lista de quem pode ser sorteado:
+    // - não pode ser ele mesmo
+    // - não pode ter sido sorteado por ninguém
+    const disponiveis = participantes.filter((p) => {
+      const ehProprio = norm(p.nome) === chave;
+      const jaFoiSorteado = p.sorteado || !!p.sorteadoPor;
+      return !ehProprio && !jaFoiSorteado;
+    });
+
+    if (disponiveis.length === 0) {
+      return res
+        .status(200)
+        .json({ mensagem: "Não há mais ninguém disponível!" });
+    }
+
+    const sorteado =
+      disponiveis[Math.floor(Math.random() * disponiveis.length)];
+
+    // segurança extra: se por algum bug ele já estiver marcado, trava
+    if (sorteado.sorteado || sorteado.sorteadoPor) {
+      console.error("Estado inconsistente, pessoa já marcada como sorteada:", sorteado);
+      return res
+        .status(500)
+        .json({ mensagem: "Erro de estado: pessoa já foi sorteada antes." });
+    }
+
+    // marca o participante
+    participante.jaSorteou = true;
+    participante.sorteou = sorteado.nome;
+
+    // marca o sorteado
+    sorteado.sorteado = true;
+    sorteado.sorteadoPor = participante.nome;
+
+    saveDB(participantes);
+
+    return res.status(200).json({ nome: sorteado.nome });
+  } catch (error) {
+    console.error("Erro no sorteio:", error);
+    return res.status(500).json({
+      mensagem: "Erro ao realizar o sorteio. Por favor, tente novamente.",
+      detalhe: String(error?.message || error)
+    });
+  }
+});
+
+// ----------------- START SERVER -----------------
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Servidor local rodando em http://localhost:${PORT}`);
+});
